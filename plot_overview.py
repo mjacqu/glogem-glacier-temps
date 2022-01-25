@@ -6,6 +6,8 @@ import os
 import difflib
 import math
 import glob
+from pyproj import Proj, transform
+from shapely.geometry import Point
 
 plt.plot()
 plt.show()
@@ -24,31 +26,76 @@ rgi_attribs = pd.concat(
 )
 
 datapath ='/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-studies = pd.read_csv(os.path.join(datapath,'01_studies.csv'))
-sites = pd.read_csv(os.path.join(datapath, '02_studysites.csv'))
-temps = pd.read_csv(os.path.join(datapath, '03_temperatures.csv'))
+studies = pd.read_csv(os.path.join(datapath,'01_studies.csv'),
+    usecols=['study_id', 'title', 'first_author', 'year', 'catalogued'])
+sites = pd.read_csv(os.path.join(datapath, '02_measurement_info.csv'),
+    usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
+       'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
+       'region_range', 'country', 'date', 'to_bottom', 'site_description',
+       'notes', 'extraction_method'],
+       dtype={'y_lat':np.float64, 'x_lon':np.float64})
+temps = pd.read_csv(os.path.join(datapath, '03_temperatures.csv'),
+    usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
+
+#Check equivalence of all id's and indicate where there might be a problem
+siteids = list(zip(sites.study_id, sites.measurement_id))
+measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
+
+#testids = [i for i, j in zip(siteids, measurementids) if i != j] #doesn't catch issue if lists are different lengths
+testids = set(siteids) - set(measurementids)
+
+if len(testids) > 0:
+    print("IDs mismatch: ignoring following entries:")
+    print(testids)
+else:
+    print('IDs match!')
+
+#ignore entries that were found to mismatch before doing join:
+ignoreids = siteids.index(testids.pop())
+sites = sites.drop(index = ignoreids, axis = 0)
 
 # join sites and temps on study_id and measurement_id keys
 sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
 
+
 # for simple plotting, calculate mean of every site
-sites['mean_temp'] = sites_temps.groupby(['study_id', 'measurement_id']).temperature.mean().values
+sites['mean_temp'] = sites_temps.groupby(['study_id', 'measurement_id']).temperature_degC.mean().values
+
 
 # add corresponding center_lat/long to sites from rgi_pts
 rgi_attribs_gdf = gpd.GeoDataFrame(rgi_attribs, geometry=gpd.points_from_xy(rgi_attribs.CenLon,rgi_attribs.CenLat))
-sites['geometry'] = pd.DataFrame([rgi_attribs_gdf[rgi_attribs_gdf['RGIId']==g].geometry.values for g in sites['rgi_id']])
+sites['glacier_centerpt'] = pd.DataFrame([rgi_attribs_gdf[rgi_attribs_gdf['RGIId']==g].geometry.values for g in sites['rgi_id']]) #get rgi centerpoint coordinates for each entry
+
+
+#add geometry of measurement site
+drill_site = []
+outproj = Proj('epsg:4326')
+for code,coords in zip(sites.epsg.iteritems(), (zip(sites.x_lon, sites.y_lat))):
+    if ~np.isnan(code[1]):
+        #print(code[1])
+        inproj = Proj('epsg:'+str(int(code[1])))
+        ds = transform(inProj,outProj,coords[0], coords[1]) #check UTM coords --> wrong transformation
+        drill_site.append(ds)
+        #print(drill_site)
+    else:
+        drill_site.append(coords)
+
+sites['drill_sites'] = gpd.GeoSeries([Point(coord[0], coord[1]) for coord in drill_site])
+
 sites = gpd.GeoDataFrame(sites)
+#create colormap
 
-
+#sites = sites.set_geometry('drill_sites')
+sites = sites.set_geometry('glacier_centerpt')
 #plot overview map
-f, ax = plt.subplots(figsize=(9,4))
+f, ax = plt.subplots(figsize=(12,6))
 world.plot(ax=ax, color='white', edgecolor='silver', zorder=1)
 rgi.geometry.plot(ax=ax, color='cyan')
 t_plot = sites.plot(ax=ax,
     column='mean_temp',
-    cmap='Reds',
+    cmap='Blues_r',
     vmin=-20, vmax=0,
-    markersize=15,
+    markersize=25,
     legend=True,
     legend_kwds={'label':'Temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
     edgecolor='k'
@@ -61,9 +108,9 @@ f.show()
 
 #plot individual measurement site
 for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
-    d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth
-    t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature
-    title = np.unique(sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].glacier)[0]
+    d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
+    t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
+    title = np.unique(sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].glacier_name)[0]
     # plot depth vs. temperature with depth increasing down
     if len(d)>1:
         f, ax = plt.subplots(figsize=(5,5))
@@ -74,5 +121,5 @@ for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
         ax.xaxis.set_label_position('top')
         ax.set_ylabel('Depth (m)')
         f.gca().invert_yaxis()
-        #f.show()
-        f.savefig(f"{title}-{i[1]}.png")
+        f.show()
+        #f.savefig(f"{title}-{i[1]}.png")
