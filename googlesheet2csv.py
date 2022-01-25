@@ -26,11 +26,11 @@ fnames = ['01_studies.csv', '02_measurement_info.csv', '03_temperatures.csv']
 #gs2csv_singlesheet(url, path, fname)
 
 #measurement_info
-fname = '02_measurement_info.csv'
-url = "https://docs.google.com/spreadsheets/d/1cMvpKicY3UOhsjdb4Y5eAh6GPPy448gLVvYGLEHsUKQ/edit#gid=0"
-gs2csv_singlesheet(url, path, fname)
+#fname = '02_measurement_info.csv'
+#url = "https://docs.google.com/spreadsheets/d/1cMvpKicY3UOhsjdb4Y5eAh6GPPy448gLVvYGLEHsUKQ/edit#gid=0"
+#gs2csv_singlesheet(url, path, fname)
 
 #03_temperatures
-fname = '03_temperatures.csv'
-url =  "https://docs.google.com/spreadsheets/d/1eB7Al8YUfPR3EYg2ETKw4QKbDFvdGy8W08daHsb94yg/edit#gid=0"
-gs2csv_singlesheet(url, path, fname)
+#fname = '03_temperatures.csv'
+#url =  "https://docs.google.com/spreadsheets/d/1eB7Al8YUfPR3EYg2ETKw4QKbDFvdGy8W08daHsb94yg/edit#gid=0"
+#gs2csv_singlesheet(url, path, fname)
