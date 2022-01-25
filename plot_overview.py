@@ -69,14 +69,14 @@ sites['glacier_centerpt'] = pd.DataFrame([rgi_attribs_gdf[rgi_attribs_gdf['RGIId
 
 #add geometry of measurement site
 drill_site = []
-outproj = Proj('epsg:4326')
+outProj = Proj('epsg:4326')
 for code,coords in zip(sites.epsg.iteritems(), (zip(sites.x_lon, sites.y_lat))):
     if ~np.isnan(code[1]):
-        #print(code[1])
-        inproj = Proj('epsg:'+str(int(code[1])))
+        print(code[1])
+        inProj = Proj('epsg:'+str(int(code[1])))
         ds = transform(inProj,outProj,coords[0], coords[1]) #check UTM coords --> wrong transformation
+        ds = (ds[1], ds[0])
         drill_site.append(ds)
-        #print(drill_site)
     else:
         drill_site.append(coords)
 
@@ -85,8 +85,8 @@ sites['drill_sites'] = gpd.GeoSeries([Point(coord[0], coord[1]) for coord in dri
 sites = gpd.GeoDataFrame(sites)
 #create colormap
 
-#sites = sites.set_geometry('drill_sites')
-sites = sites.set_geometry('glacier_centerpt')
+sites = sites.set_geometry('drill_sites')
+#sites = sites.set_geometry('glacier_centerpt')
 #plot overview map
 f, ax = plt.subplots(figsize=(12,6))
 world.plot(ax=ax, color='white', edgecolor='silver', zorder=1)
@@ -105,7 +105,7 @@ ax.set_xlim([-180,180])
 f.tight_layout()
 f.show()
 #f.savefig('thermal_regimes.pdf')
-
+'''
 #plot individual measurement site
 for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
     d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
@@ -123,3 +123,4 @@ for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
         f.gca().invert_yaxis()
         f.show()
         #f.savefig(f"{title}-{i[1]}.png")
+'''
