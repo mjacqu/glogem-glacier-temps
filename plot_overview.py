@@ -8,6 +8,7 @@ import math
 import glob
 from pyproj import Proj, transform
 from shapely.geometry import Point
+import re
 
 plt.plot()
 plt.show()
@@ -20,8 +21,9 @@ rgipath = '/Users/mistral/Documents/CUBoulder/Science/spatial_base_data/buffered
 rgi = gpd.read_file(os.path.join(rgipath, 'rgi60_buff_diss.shp'))
 
 #import all attributes from rgi (including center lat/long)
+spatial_data_path = '/Users/mistral/Documents/CUBoulder/Science/spatial_base_data'
 rgi_attribs = pd.concat(
-    [pd.read_csv(f, encoding='latin1') for f in glob.glob('/Users/mistral/Documents/CUBoulder/Science/spatial_base_data/00_rgi60_attribs/*.csv')],
+    [pd.read_csv(f, encoding='latin1') for f in glob.glob(os.path.join(spatial_data_path,'00_rgi60_attribs/*.csv'))],
     ignore_index = True
 )
 
@@ -72,7 +74,7 @@ drill_site = []
 outProj = Proj('epsg:4326')
 for code,coords in zip(sites.epsg.iteritems(), (zip(sites.x_lon, sites.y_lat))):
     if ~np.isnan(code[1]):
-        print(code[1])
+        #print(code[1])
         inProj = Proj('epsg:'+str(int(code[1])))
         ds = transform(inProj,outProj,coords[0], coords[1]) #check UTM coords --> wrong transformation
         ds = (ds[1], ds[0])
@@ -85,8 +87,8 @@ sites['drill_sites'] = gpd.GeoSeries([Point(coord[0], coord[1]) for coord in dri
 sites = gpd.GeoDataFrame(sites)
 #create colormap
 
-sites = sites.set_geometry('drill_sites')
-#sites = sites.set_geometry('glacier_centerpt')
+#sites = sites.set_geometry('drill_sites')
+sites = sites.set_geometry('glacier_centerpt')
 #plot overview map
 f, ax = plt.subplots(figsize=(12,6))
 world.plot(ax=ax, color='white', edgecolor='silver', zorder=1)
@@ -105,8 +107,56 @@ ax.set_xlim([-180,180])
 f.tight_layout()
 f.show()
 #f.savefig('thermal_regimes.pdf')
+
+#Plot boreholes sites on individual glaciers
+
+rgi_regions = np.unique([re.findall(r"\-(\d+)\.", id) for id in sites.rgi_id]) #rgi regions from all ids
+rgi_files = glob.glob(os.path.join(spatial_data_path, "*rgi60_*")) #all filenames that contain rgi
+
+def load_rgi(spatial_data_path, rgi_region):
+    '''
+    Load rgi shapefile for defined rgi_region (str)
+    '''
+    filepath = glob.glob(os.path.join(spatial_data_path,f"{rgi_region}_rgi60_*"))[0]
+    outlines = gpd.read_file(os.path.join(filepath,f"{os.path.basename(filepath)}.shp"))
+    return outlines
+
+
+region = '03'
+rgi_outlines = load_rgi(spatial_data_path, region)
+
+glaciers_in_region = [re.findall(fr"\w+\-{nr}\.\d+", id) for id in sites.rgi_id] #finds all rgi_ids from a specific region
+glaciers_in_region = [x for x in glaciers_in_region if x]
+
+def glacier_data(rgiid, rgi_outlines, sites):
+    glacier_outline = rgi_outlines[rgi_outlines.RGIId == rgiid]
+    drill_sites = sites[sites.rgi_id == rgiid]
+    drill_sites = drill_sites.set_geometry('drill_sites')
+    glacier_name = np.unique(drill_sites.glacier_name)[0]
+    return glacier_outline, drill_sites, glacier_name
+
+rgiid = 'RGI60-03.04539'
+
+glacier_outline, drill_sites, gn = glacier_data(rgiid, rgi_outlines, sites)
+
+f, ax = plt.subplots()
+drill_plot = drill_sites.plot(ax=ax,
+    column='mean_temp',
+    cmap='Blues_r',
+    vmin=-20, vmax=0,
+    markersize=25,
+    legend=True,
+    legend_kwds={'label':'Temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
+    edgecolor='k',
+    zorder=1
+)
+glacier_outline.geometry.plot(ax=ax, edgecolor='black', color='w', zorder=0)
+ax.set_title(f"{gn}")
+f.tight_layout()
+f.show()
+
 '''
-#plot individual measurement site
+#plot individual measurement site (one plot per borehole)
 for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
     d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
     t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
