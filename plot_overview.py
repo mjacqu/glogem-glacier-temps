@@ -122,11 +122,11 @@ def load_rgi(spatial_data_path, rgi_region):
     return outlines
 
 
-region = '03'
+region = '11'
 rgi_outlines = load_rgi(spatial_data_path, region)
 
-glaciers_in_region = [re.findall(fr"\w+\-{nr}\.\d+", id) for id in sites.rgi_id] #finds all rgi_ids from a specific region
-glaciers_in_region = [x for x in glaciers_in_region if x]
+glaciers_in_region = [re.findall(fr"\w+\-{region}\.\d+", id) for id in sites.rgi_id] #finds all rgi_ids from a specific region
+glaciers_in_region = np.unique([x for x in glaciers_in_region if x])
 
 def glacier_data(rgiid, rgi_outlines, sites):
     glacier_outline = rgi_outlines[rgi_outlines.RGIId == rgiid]
@@ -135,29 +135,50 @@ def glacier_data(rgiid, rgi_outlines, sites):
     glacier_name = np.unique(drill_sites.glacier_name)[0]
     return glacier_outline, drill_sites, glacier_name
 
-rgiid = 'RGI60-03.04539'
+rgiid = 'RGI60-11.02244'
 
 glacier_outline, drill_sites, gn = glacier_data(rgiid, rgi_outlines, sites)
 
-f, ax = plt.subplots()
-drill_plot = drill_sites.plot(ax=ax,
-    column='mean_temp',
-    cmap='Blues_r',
-    vmin=-20, vmax=0,
-    markersize=25,
-    legend=True,
-    legend_kwds={'label':'Temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
-    edgecolor='k',
-    zorder=1
-)
-glacier_outline.geometry.plot(ax=ax, edgecolor='black', color='w', zorder=0)
-ax.set_title(f"{gn}")
-f.tight_layout()
-f.show()
+def glacier_plot(glacier_outline, drill_sites, gn):
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,6))
+    f.suptitle(f"{gn}")
+    drill_plot = drill_sites.plot(ax=ax1,
+        column='mean_temp',
+        cmap='Blues_r',
+        vmin=-20, vmax=0,
+        markersize=25,
+        legend=True,
+        legend_kwds={'label':'Mean temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
+        edgecolor='k',
+        zorder=1
+    )
+    drill_sites.apply(lambda x: ax1.annotate(
+        text=x.measurement_id,
+        xy=x.loc['drill_sites'].coords[0],
+        xytext=(-5,-10),
+        textcoords='offset points',
+        fontsize=7),
+        axis=1
+        )
+    glacier_outline.geometry.plot(ax=ax1, edgecolor='black', color='w', zorder=0)
+    #
+    for i in sorted(set(zip(drill_sites.study_id, drill_sites.measurement_id))):
+        f.gca().invert_yaxis()
+        d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
+        t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
+        ax2.scatter(t,d, s=3, label=f"{i[1]}", zorder=1)
+        ax2.plot(t,d, zorder=0)
+        #ax.set_title(f"{drill_sites.measurement_id}")
+    ax2.set_ylabel('Depth (m)')
+    ax2.set_xlabel('Temperature (m)')
+    ax2.legend()
+    return(f)
 
+f = glacier_plot(glacier_outline, drill_sites, gn)
+f.show()
 '''
 #plot individual measurement site (one plot per borehole)
-for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
+for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
     d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
     t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
     title = np.unique(sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].glacier_name)[0]
@@ -173,4 +194,26 @@ for i in set(zip(sites_temps.study_id, sites_temps.measurement_id)):
         f.gca().invert_yaxis()
         f.show()
         #f.savefig(f"{title}-{i[1]}.png")
+
+    #next: add subplot with profile for each borehole
+    nr_plots = len(set(zip(drill_sites.study_id, drill_sites.measurement_id)))
+    Cols = int(nr_plots**0.5)
+    Rows = np.ceil(nr_plots/Cols)
+
+    Position = range(1,nr_plots + 1)
+
+    fig = plt.figure(1, figsize = (8,10))
+    k=0
+    for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
+        fig.gca().invert_yaxis()
+        # add every single subplot to the figure with a for loo
+        d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
+        t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
+        ax = fig.add_subplot(int(Rows),int(Cols),Position[k])
+        ax.scatter(t,d, s=2, c='r')
+        ax.plot(t,d, linewidth=0.5, c='k')     # Or whatever you want in the subplot
+        k+=1
+
+    plt.show()
+
 '''
