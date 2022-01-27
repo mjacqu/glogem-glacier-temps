@@ -105,14 +105,12 @@ t_plot = sites.plot(ax=ax,
 ax.set_ylim([-60,90])
 ax.set_xlim([-180,180])
 f.tight_layout()
-f.show()
+f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/thermal_regimes.pdf")
 #f.savefig('thermal_regimes.pdf')
 
 #Plot boreholes sites on individual glaciers
 
-rgi_regions = np.unique([re.findall(r"\-(\d+)\.", id) for id in sites.rgi_id]) #rgi regions from all ids
-rgi_files = glob.glob(os.path.join(spatial_data_path, "*rgi60_*")) #all filenames that contain rgi
-
+#1. function to load correct rgi data:
 def load_rgi(spatial_data_path, rgi_region):
     '''
     Load rgi shapefile for defined rgi_region (str)
@@ -121,13 +119,7 @@ def load_rgi(spatial_data_path, rgi_region):
     outlines = gpd.read_file(os.path.join(filepath,f"{os.path.basename(filepath)}.shp"))
     return outlines
 
-
-region = '11'
-rgi_outlines = load_rgi(spatial_data_path, region)
-
-glaciers_in_region = [re.findall(fr"\w+\-{region}\.\d+", id) for id in sites.rgi_id] #finds all rgi_ids from a specific region
-glaciers_in_region = np.unique([x for x in glaciers_in_region if x])
-
+#2. function to get all data for plotting based on an rgi-id:
 def glacier_data(rgiid, rgi_outlines, sites):
     glacier_outline = rgi_outlines[rgi_outlines.RGIId == rgiid]
     drill_sites = sites[sites.rgi_id == rgiid]
@@ -135,10 +127,7 @@ def glacier_data(rgiid, rgi_outlines, sites):
     glacier_name = np.unique(drill_sites.glacier_name)[0]
     return glacier_outline, drill_sites, glacier_name
 
-rgiid = 'RGI60-11.02244'
-
-glacier_outline, drill_sites, gn = glacier_data(rgiid, rgi_outlines, sites)
-
+#3. function to create the plot
 def glacier_plot(glacier_outline, drill_sites, gn):
     f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,6))
     f.suptitle(f"{gn}")
@@ -170,12 +159,32 @@ def glacier_plot(glacier_outline, drill_sites, gn):
         ax2.plot(t,d, zorder=0)
         #ax.set_title(f"{drill_sites.measurement_id}")
     ax2.set_ylabel('Depth (m)')
-    ax2.set_xlabel('Temperature (m)')
+    ax2.set_xlabel('Temperature (Deg. C)')
     ax2.legend()
     return(f)
 
-f = glacier_plot(glacier_outline, drill_sites, gn)
-f.show()
+
+
+
+# Now iterate over all regions and save out figure for each glacier
+
+rgi_regions = np.unique([re.findall(r"\-(\d+)\.", id) for id in sites.rgi_id]) #rgi regions from all ids
+rgi_files = glob.glob(os.path.join(spatial_data_path, "*rgi60_*")) #all filenames that contain rgi
+
+#Start by iterating over each region, then plot main glacier plot for each unique RGI-ID
+for r in rgi_regions:
+    #load rgi outlines for one region
+    rgi_outlines = load_rgi(spatial_data_path, r)
+    #find all rgi_ids from a specific region
+    glaciers_in_region = [re.findall(fr"\w+\-{r}\.\d+", id) for id in sites.rgi_id]
+    glaciers_in_region = np.unique([x for x in glaciers_in_region if x])
+    # now interate over all unique ids in region to pull out corresponding data:
+    for id in glaciers_in_region:
+        glacier_outline, drill_sites, gn = glacier_data(id, rgi_outlines, sites)
+        #then create plot
+        f = glacier_plot(glacier_outline, drill_sites, gn)
+        f.savefig(f"/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/{gn}.pdf")
+
 '''
 #plot individual measurement site (one plot per borehole)
 for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
