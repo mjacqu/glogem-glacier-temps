@@ -49,12 +49,12 @@ testids = set(siteids) - set(measurementids)
 if len(testids) > 0:
     print("IDs mismatch: ignoring following entries:")
     print(testids)
+    #ignore entries that were found to mismatch before doing join:
+    ignoreids = siteids.index(testids.pop())
+    sites = sites.drop(index = ignoreids, axis = 0)
 else:
     print('IDs match!')
 
-#ignore entries that were found to mismatch before doing join:
-ignoreids = siteids.index(testids.pop())
-sites = sites.drop(index = ignoreids, axis = 0)
 
 # join sites and temps on study_id and measurement_id keys
 sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
@@ -105,7 +105,7 @@ t_plot = sites.plot(ax=ax,
 ax.set_ylim([-60,90])
 ax.set_xlim([-180,180])
 f.tight_layout()
-f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/thermal_regimes.pdf")
+f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/thermal_regimes.pdf")
 #f.savefig('thermal_regimes.pdf')
 
 #Plot boreholes sites on individual glaciers
@@ -151,8 +151,7 @@ def glacier_plot(glacier_outline, drill_sites, gn):
         )
     glacier_outline.geometry.plot(ax=ax1, edgecolor='black', color='w', zorder=0)
     #
-    for i in sorted(set(zip(drill_sites.study_id, drill_sites.measurement_id))):
-        f.gca().invert_yaxis()
+    for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
         d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
         t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
         ax2.scatter(t,d, s=3, label=f"{i[1]}", zorder=1)
@@ -160,6 +159,7 @@ def glacier_plot(glacier_outline, drill_sites, gn):
         #ax.set_title(f"{drill_sites.measurement_id}")
     ax2.set_ylabel('Depth (m)')
     ax2.set_xlabel('Temperature (Deg. C)')
+    ax2.invert_yaxis()
     ax2.legend()
     return(f)
 
@@ -184,7 +184,7 @@ for r in rgi_regions:
         #then create plot
         f = glacier_plot(glacier_outline, drill_sites, gn)
         f.savefig(f"/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/{gn}.pdf")
-
+        f.close()
 '''
 #plot individual measurement site (one plot per borehole)
 for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
