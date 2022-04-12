@@ -13,7 +13,7 @@ def gs2csv_multisheet(sheetid, sheetname, path, fname):
     df = pd.read_csv(url)
     df.to_csv(os.path.join(path,fname), index=False)
 
-path = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
+path = './'
 sheet_id = '1zxn_8nitemCcFP5D-pGMRHwt6UYowfWnPx_Mq3gXVo4'
 sheet_names = ['studies', 'measurement_info', 'data']
 fnames = ['01_studies.csv', '02_measurement_info.csv', '03_temperatures.csv']
