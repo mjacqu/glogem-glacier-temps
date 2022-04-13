@@ -16,7 +16,7 @@ def gs2csv_multisheet(sheetid, sheetname, path, fname):
 path = './'
 sheet_id = '1zxn_8nitemCcFP5D-pGMRHwt6UYowfWnPx_Mq3gXVo4'
 sheet_names = ['studies', 'measurement_info', 'data']
-fnames = ['01_studies.csv', '02_measurement_info.csv', '03_temperatures.csv']
+fnames = ['studies.csv', 'measurement_info.csv', 'temperatures.csv']
 
 [gs2csv_multisheet(sheet_id, sn, path, fn) for sn, fn in zip(sheet_names, fnames)]
 
