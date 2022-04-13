@@ -28,15 +28,15 @@ rgi_attribs = pd.concat(
 )
 
 datapath ='/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-studies = pd.read_csv(os.path.join(datapath,'01_studies.csv'),
-    usecols=['study_id', 'title', 'first_author', 'year', 'catalogued'])
-sites = pd.read_csv(os.path.join(datapath, '02_measurement_info.csv'),
+studies = pd.read_csv(os.path.join(datapath,'studies.csv'),
+    usecols=['study_id', 'first_author', 'year', 'title', 'catalogued'])
+sites = pd.read_csv(os.path.join(datapath, 'measurement_info.csv'),
     usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
        'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
        'region_range', 'country', 'date', 'to_bottom', 'site_description',
        'notes', 'extraction_method'],
        dtype={'y_lat':np.float64, 'x_lon':np.float64})
-temps = pd.read_csv(os.path.join(datapath, '03_temperatures.csv'),
+temps = pd.read_csv(os.path.join(datapath, 'temperatures.csv'),
     usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
 
 #Check equivalence of all id's and indicate where there might be a problem
