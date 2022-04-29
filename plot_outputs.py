@@ -1,45 +1,32 @@
 import numpy as np
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
-
-
-def read_depth_temps(fn, header, skp_rows):
-    temps = pd.read_table(fn,
-        header=skp_rows,
-        sep='\s+',
-        names=header,
-        index_col=None,
-        na_values=-99-0
-)
-    return temps
+import GloGlaThelpers as ggthelp
 
 
 years = list(np.arange(1980, 2020, 1))
 header_gl = years.copy()
 header_gl.insert(0,'Elev')
 
-temps_1m = read_depth_temps('firnice_temperature/temp_1m_01450.dat', header_gl, 0)
-temps_10m = read_depth_temps('firnice_temperature/temp_10m_01450.dat', header_gl, 0)
-temps_50m = read_depth_temps('firnice_temperature/temp_50m_01450.dat', header_gl, 0)
-temps_bed = read_depth_temps('firnice_temperature/temp_bedrock_01450.dat', header_gl, 0)
+datapath = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data/firnice_temperature'
+region_name = 'CentralEurope'
+rgiid = '01450'
+regionlist = pd.read_csv(os.path.join(datapath,'regionIDs.csv'))
+region_id = ggthelp.get_region_id(region_name, regionlist)
 
-#plot temperatures along glacier for one year
-def flowline_temperatures(dfs, year):
-    '''
-    dfs (list): list of arrays to be used
-    year (int): year for which to compile flowline temperatures
-    '''
-    flt = np.vstack((dfs[0][year].T,
-        dfs[1][year].T,
-        dfs[2][year].T,
-        dfs[3][year].T)
-    )
-    return flt
+glacier_id = ggthelp.full_rgiid(rgiid, region_id)
+
+temps_1m = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_1m_{rgiid}.dat"), header_gl, 0)
+temps_10m = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_10m_{rgiid}.dat"), header_gl, 0)
+temps_50m = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_50m_{rgiid}.dat"), header_gl, 0)
+temps_bed = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_bedrock_{rgiid}.dat"), header_gl, 0)
+
 
 dfs = [temps_1m, temps_10m, temps_50m, temps_bed]
 
-flt_1980 = flowline_temperatures(dfs, 1980)
-flt_2019 = flowline_temperatures(dfs, 2019)
+flt_1980 = ggthelp.flowline_temperatures(dfs, 1990)
+flt_2019 = ggthelp.flowline_temperatures(dfs, 2019)
 
 # depth-dependent temperature along the flowline
 h_f = 400
@@ -48,15 +35,15 @@ ticks = [0+h_f/8, 0.25*h_f+h_f/8, 0.5*h_f+h_f/8, 0.75*h_f+h_f/8 ]
 ticklabels = ['bed', '50m', '10m', '1m']
 
 f, ax = plt.subplots(figsize = (8,2))
-T = ax.imshow(np.fliplr(flt_1980), extent=extent)
+T = ax.imshow(np.fliplr(flt_2019), extent=extent)
 ax.set_xlabel('Glacier surface elevation (m asl)')
 ax.set_ylabel('Depth')
-ax.set_title('Aletsch 1980')
+ax.set_title(f"{glacier_id}")
 f.gca().set_yticks(ticks)
 f.gca().set_yticklabels(ticklabels)
 f.colorbar(T)
-#f.show()
-f.savefig('aletsch_flt_1980.png')
+f.show()
+#f.savefig('aletsch_flt_1980.png')
 
 #Evolution of flowline temperatures
 h_f = 400
@@ -68,31 +55,25 @@ f, ax = plt.subplots(figsize = (8,2))
 T = ax.imshow(np.fliplr(flt_2019-flt_1980), extent=extent, cmap='Reds')
 ax.set_xlabel('Glacier surface elevation (m asl)')
 ax.set_ylabel('Depth')
-ax.set_title('Aletsch 2019-1980')
+ax.set_title(f"{glacier_id}")
 f.gca().set_yticks(ticks)
 f.gca().set_yticklabels(ticklabels)
 f.colorbar(T)
-#f.show()
-f.savefig('Aletsch_fltdiff_2019-1980.png')
+f.show()
+#f.savefig('Aletsch_fltdiff_2019-1980.png')
 
 
 
-depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259,299]) #added 299 to make enough header lines
+depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259, 299]) #added 299 to make enough header lines
 header_pt = ['Year', 'Month'] + depth
 
-pt1 = read_depth_temps('firnice_temperature/temp_P1_01450.dat', header_pt, 1)
-pt2 = read_depth_temps('firnice_temperature/temp_P2_01450.dat', header_pt, 1)
-pt3 = read_depth_temps('firnice_temperature/temp_P3_01450.dat', header_pt, 1)
+pt1 = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_P1_{rgiid}.dat"), header_pt, 1)
+pt2 = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_P2_{rgiid}.dat"), header_pt, 1)
+pt3 = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/temp_P3_{rgiid}.dat"), header_pt, 1)
 
-def format_df(df):
-    df['Datetime'] = pd.to_datetime({'year':df.Year, 'month':df.Month, 'day':'01'})
-    df = df.drop(columns=['Year', 'Month'])
-    df = df.set_index('Datetime')
-    return df
-
-pt1 = format_df(pt1)
-pt2 = format_df(pt2)
-pt3 = format_df(pt3)
+pt1 = ggthelp.format_df(pt1)
+pt2 = ggthelp.format_df(pt2)
+pt3 = ggthelp.format_df(pt3)
 
 #plot data at point by year
 f, ax = plt.subplots()
@@ -110,4 +91,4 @@ ax.xaxis.tick_top()
 ax.set_title('Aletsch Pt. 1 (2095 m asl)')
 f.gca().invert_yaxis()
 f.show()
-f.savefig('Aletsch_pt1_2000.png')
+#f.savefig('Aletsch_pt1_2000.png')
