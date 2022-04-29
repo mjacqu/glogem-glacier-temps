@@ -9,6 +9,8 @@ import glob
 from pyproj import Proj, transform
 from shapely.geometry import Point
 import re
+import GloGlaThelpers as ggthelp
+
 
 plt.plot()
 plt.show()
@@ -109,63 +111,6 @@ f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/thermal_regime
 #f.savefig('thermal_regimes.pdf')
 
 #Plot boreholes sites on individual glaciers
-
-#1. function to load correct rgi data:
-def load_rgi(spatial_data_path, rgi_region):
-    '''
-    Load rgi shapefile for defined rgi_region (str)
-    '''
-    filepath = glob.glob(os.path.join(spatial_data_path,f"{rgi_region}_rgi60_*"))[0]
-    outlines = gpd.read_file(os.path.join(filepath,f"{os.path.basename(filepath)}.shp"))
-    return outlines
-
-#2. function to get all data for plotting based on an rgi-id:
-def glacier_data(rgiid, rgi_outlines, sites):
-    glacier_outline = rgi_outlines[rgi_outlines.RGIId == rgiid]
-    drill_sites = sites[sites.rgi_id == rgiid]
-    drill_sites = drill_sites.set_geometry('drill_sites')
-    glacier_name = np.unique(drill_sites.glacier_name)[0]
-    return glacier_outline, drill_sites, glacier_name
-
-#3. function to create the plot
-def glacier_plot(glacier_outline, drill_sites, gn):
-    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,6))
-    f.suptitle(f"{gn}")
-    drill_plot = drill_sites.plot(ax=ax1,
-        column='mean_temp',
-        cmap='Blues_r',
-        vmin=-20, vmax=0,
-        markersize=25,
-        legend=True,
-        legend_kwds={'label':'Mean temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
-        edgecolor='k',
-        zorder=1
-    )
-    drill_sites.apply(lambda x: ax1.annotate(
-        text=x.measurement_id,
-        xy=x.loc['drill_sites'].coords[0],
-        xytext=(-5,-10),
-        textcoords='offset points',
-        fontsize=7),
-        axis=1
-        )
-    glacier_outline.geometry.plot(ax=ax1, edgecolor='black', color='w', zorder=0)
-    #
-    for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
-        d = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].depth_m
-        t = sites_temps[((sites_temps.study_id==i[0]) & (sites_temps.measurement_id==i[1]))].temperature_degC
-        ax2.scatter(t,d, s=3, label=f"{i[1]}", zorder=1)
-        ax2.plot(t,d, zorder=0)
-        #ax.set_title(f"{drill_sites.measurement_id}")
-    ax2.set_ylabel('Depth (m)')
-    ax2.set_xlabel('Temperature (Deg. C)')
-    ax2.invert_yaxis()
-    ax2.legend()
-    return(f)
-
-
-
-
 # Now iterate over all regions and save out figure for each glacier
 
 rgi_regions = np.unique([re.findall(r"\-(\d+)\.", id) for id in sites.rgi_id]) #rgi regions from all ids
@@ -174,15 +119,15 @@ rgi_files = glob.glob(os.path.join(spatial_data_path, "*rgi60_*")) #all filename
 #Start by iterating over each region, then plot main glacier plot for each unique RGI-ID
 for r in rgi_regions:
     #load rgi outlines for one region
-    rgi_outlines = load_rgi(spatial_data_path, r)
+    rgi_outlines = ggthelp.load_rgi(spatial_data_path, r)
     #find all rgi_ids from a specific region
     glaciers_in_region = [re.findall(fr"\w+\-{r}\.\d+", id) for id in sites.rgi_id]
     glaciers_in_region = np.unique([x for x in glaciers_in_region if x])
     # now interate over all unique ids in region to pull out corresponding data:
     for id in glaciers_in_region:
-        glacier_outline, drill_sites, gn = glacier_data(id, rgi_outlines, sites)
+        glacier_outline, drill_sites, gn = ggthelp.glacier_data(id, rgi_outlines, sites)
         #then create plot
-        f = glacier_plot(glacier_outline, drill_sites, gn)
+        f = ggthelp.glacier_plot(glacier_outline, drill_sites, gn)
         f.savefig(f"/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/{gn}.pdf")
         f.close()
 '''
