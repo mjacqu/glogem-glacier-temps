@@ -1,5 +1,48 @@
 import numpy as np
 import pandas as pd
+import os
+
+#read data from digizied database:
+def import_database(path):
+    """
+    Read digitized data and join studies, measurement metadata and temperatures
+    into one database that can be used for plotting.
+
+    Parameters:
+    path (str): path to directory that holds stuides.csv, measurement_info.csv,
+    temperatures.csv
+
+    Return:
+    joined database as pandas dataframe
+    """
+    studies = pd.read_csv(os.path.join(path,'studies.csv'),
+        usecols=['study_id', 'first_author', 'year', 'title', 'catalogued'])
+    sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
+        usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
+           'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
+           'region_range', 'country', 'date', 'to_bottom', 'site_description',
+           'notes', 'extraction_method'],
+           dtype={'y_lat':np.float64, 'x_lon':np.float64})
+    temps = pd.read_csv(os.path.join(path, 'temperatures.csv'),
+        usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
+    #Check equivalence of all id's and indicate where there might be a problem
+    siteids = list(zip(sites.study_id, sites.measurement_id))
+    measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
+    #testids = [i for i, j in zip(siteids, measurementids) if i != j] #doesn't catch issue if lists are different lengths
+    testids = set(siteids) - set(measurementids)
+    print("Check whether all tables list same IDs, drop ones that are not in all tables")
+    if len(testids) > 0:
+        print("IDs mismatch: ignoring following entries:")
+        print(testids)
+        #ignore entries that were found to mismatch before doing join:
+        ignoreids = siteids.index(testids.pop())
+        sites = sites.drop(index = ignoreids, axis = 0)
+    else:
+        print('IDs match!')
+    # join sites and temps on study_id and measurement_id keys
+    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
+    sites_temps.date = pd.to_datetime(sites_temps.date)
+    return sites_temps
 
 def read_depth_temps(fn, header, skp_rows):
     """
@@ -11,8 +54,10 @@ def read_depth_temps(fn, header, skp_rows):
         names=header,
         index_col=None,
         na_values=-99-0
-)
-    return temps
+    )
+    with open(fn) as f:
+        header_info = next(f)
+    return temps, header_info
 
 #plot temperatures along glacier for one year
 def flowline_temperatures(dfs, year):
