@@ -29,37 +29,9 @@ rgi_attribs = pd.concat(
     ignore_index = True
 )
 
+#load and construct database
 datapath ='/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-studies = pd.read_csv(os.path.join(datapath,'studies.csv'),
-    usecols=['study_id', 'first_author', 'year', 'title', 'catalogued'])
-sites = pd.read_csv(os.path.join(datapath, 'measurement_info.csv'),
-    usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
-       'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
-       'region_range', 'country', 'date', 'to_bottom', 'site_description',
-       'notes', 'extraction_method'],
-       dtype={'y_lat':np.float64, 'x_lon':np.float64})
-temps = pd.read_csv(os.path.join(datapath, 'temperatures.csv'),
-    usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
-
-#Check equivalence of all id's and indicate where there might be a problem
-siteids = list(zip(sites.study_id, sites.measurement_id))
-measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
-
-#testids = [i for i, j in zip(siteids, measurementids) if i != j] #doesn't catch issue if lists are different lengths
-testids = set(siteids) - set(measurementids)
-
-if len(testids) > 0:
-    print("IDs mismatch: ignoring following entries:")
-    print(testids)
-    #ignore entries that were found to mismatch before doing join:
-    ignoreids = siteids.index(testids.pop())
-    sites = sites.drop(index = ignoreids, axis = 0)
-else:
-    print('IDs match!')
-
-
-# join sites and temps on study_id and measurement_id keys
-sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
+sites_temps = ggthelp.import_database(datapath)
 
 
 # for simple plotting, calculate mean of every site
