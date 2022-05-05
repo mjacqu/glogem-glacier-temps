@@ -33,15 +33,16 @@ for pf in pointfiles:
     header_pt = ['Year', 'Month'] + depth
 
     pt, metadata = ggthelp.read_depth_temps(os.path.join(datapath,f"{region_name}/{pf}"), header_pt, 1)
-    model_elevation = float(re.findall(r"\d{3}", metadata)[0])
+    model_elevation = float(re.findall(r"\d{3,4}", metadata)[0])
     pt = ggthelp.format_df(pt)
 
 
     #read data from validation data
-    path ='/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-    sites_temps = ggthelp.import_database(path)
+    database_path ='/Users/mistral/git_repos/GloGlaT'
+    sites_temps = ggthelp.import_database(database_path)
 
     #plot measured vs. modeled for all validation sites:
+    path = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
     validation_sites = pd.read_csv(os.path.join(path, "initial_test_glaciers.csv"),
         usecols=['rgi_id', 'elevation_masl'])
     validation_data = pd.merge(validation_sites, sites_temps, on=['rgi_id', 'elevation_masl'])
