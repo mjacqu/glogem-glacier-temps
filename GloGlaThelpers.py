@@ -20,7 +20,7 @@ def import_database(path):
     sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
         usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
            'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
-           'region_range', 'country', 'date', 'to_bottom', 'site_description',
+           'region_range', 'country', 'date','start_date', 'end_date', 'to_bottom', 'site_description',
            'notes', 'extraction_method'],
            dtype={'y_lat':np.float64, 'x_lon':np.float64})
     temps = pd.read_csv(os.path.join(path, 'temperatures.csv'),
@@ -42,7 +42,7 @@ def import_database(path):
     # join sites and temps on study_id and measurement_id keys
     sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
     sites_temps.date = pd.to_datetime(sites_temps.date)
-    return sites_temps
+    return sites_temps, sites
 
 def read_depth_temps(fn, header, skp_rows):
     """
