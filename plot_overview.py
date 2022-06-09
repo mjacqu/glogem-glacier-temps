@@ -30,13 +30,11 @@ rgi_attribs = pd.concat(
 )
 
 #load and construct database
-datapath ='/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-sites_temps = ggthelp.import_database(datapath)
-
+datapath ='/Users/mistral/git_repos/GloGlaT/'
+sites_temps, sites = ggthelp.import_database(datapath)
 
 # for simple plotting, calculate mean of every site
-sites['mean_temp'] = sites_temps.groupby(['study_id', 'measurement_id']).temperature_degC.mean().values
-
+sites['mean_temp'] = sites_temps.groupby(['measurement_id']).temperature_degC.mean().values
 
 # add corresponding center_lat/long to sites from rgi_pts
 rgi_attribs_gdf = gpd.GeoDataFrame(rgi_attribs, geometry=gpd.points_from_xy(rgi_attribs.CenLon,rgi_attribs.CenLat))
