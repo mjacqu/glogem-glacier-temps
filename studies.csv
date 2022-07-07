@@ -27,7 +27,7 @@ study_id,first_author,year,title,catalogued,doi
 26.0,Gilbert,2012,"The influence of snow cover thickness on the thermal regime of Tête Rousse Glacier (Mont Blanc range, 3200 m a.s.l.): Consequences for outburst flood hazards and glacier response to climate change",True,10.1029/2011JF002258
 27.0,Gilbert,2015,Assessment of thermal change in cold avalanching glaciers in relation to climate warming,True,10.1002/2015GL064838
 28.0,Clarke,1976,"Post-Surge Temperatures in Steele Glacier, Yukon Territory, Canada",True,10.3189/S0022143000031580
-29.0,Classen,1976,"THERMAL DRILLING AND DEEP ICE-TEMPERATURE MEASUREMENTS ON THE FOX GLACIER, YUKON",True,
+29.0,Classen,1976,"Thermal drilling and deep ice-temperature measurements on the Fox Glacier, Yukon",True,
 30.0,Eisen,2009,"Deducing the thermal structure in the tongue of Gornergletscher, Switzerland, from radar surveys and borehole measurements",True,10.3189/172756409789097612
 31.0,Gilbert,2020,The influence of water percolation through crevasses on the thermal regime of a Himalayan mountain glacier,True,10.5194/tc-14-1273-2020
 32.0,Haeberli,2004,Characteristics and potential climatic significance of “miniature ice caps” (crest- and cornice-type low-altitude ice archives),True,10.3189/172756504781830330
@@ -50,7 +50,7 @@ study_id,first_author,year,title,catalogued,doi
 49.0,Loewe ,1970,Screen Temperatures and 10m Temperatures*,False,10.3189/S0022143000023571
 50.0,Miles,2018,Polythermal structure of a Himalayan debris-covered glacier revealed by borehole thermometry,True,10.1038/s41598-018-34327-5
 51.0,Müller,1976,On the Thermal Regime of a High-Arctic Valley Glacier,True,10.3189/S0022143000031476
-52.0,Naftz,1993,"ICE THICKNESS, ABLATION, AND OTHER GLACIOLOGICAL MEASUREMENTS ON UPPER FREMONT GLACIER, WYOMING",True,10.1080/02723646.1993.10642488
+52.0,Naftz,1993,"Ice thickness, ablation, and other glaciological measurements on Upper Fremont Glacier, Wyoming",True,10.1080/02723646.1993.10642488
 53.0,Nagornov,2006,Temperature reconstruction for Arctic glaciers,False,10.1016/j.palaeo.2005.11.035
 54.0,Odegard,1997,"Comparison of radio-echo sounding (30–1000 MHz) and high-resolution borehole-temperature measurements at Finsterwalderbreen, southern Spitsbergen, Svalbard",True,10.3189/S0260305500012271
 55.0,Paterson,1971,"Temperature Measurements in Athabasca Glacier, Alberta, Canada",True,10.3189/S0022143000022036
