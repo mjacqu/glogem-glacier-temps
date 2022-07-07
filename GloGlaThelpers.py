@@ -20,7 +20,7 @@ def import_database(path):
     sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
         usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
            'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
-           'region_range', 'country', 'date','start_date', 'end_date', 'to_bottom', 'site_description',
+            'date','start_date', 'end_date', 'to_bottom', 'site_description',
            'notes', 'extraction_method'],
            dtype={'y_lat':np.float64, 'x_lon':np.float64})
     temps = pd.read_csv(os.path.join(path, 'temperatures.csv'),
