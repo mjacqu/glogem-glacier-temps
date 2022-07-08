@@ -43,6 +43,8 @@ def import_database(path):
     sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
     sites_temps.start_date = pd.to_datetime(sites_temps.start_date)
     sites_temps.end_date = pd.to_datetime(sites_temps.end_date)
+    sites.start_date = pd.to_datetime(sites_temps.start_date)
+    sites.end_date = pd.to_datetime(sites_temps.end_date)
     return sites_temps, sites
 
 def read_depth_temps(fn, header, skp_rows):
