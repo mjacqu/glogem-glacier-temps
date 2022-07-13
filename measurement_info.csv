@@ -224,7 +224,7 @@ study_id,measurement_id,location_source,y_lat,x_lon,epsg,elevation_source,elevat
 76,223,digitized from plot,69.74945,-72.154976,,estimated from firgure in Hooke 1980,850,Barnes Ice Cap,RGI60-04.06187,1976-07-09,1976-07-09,False,,T020,plot digitizer,
 76,224,digitized from plot,69.78899,-71.9703,,estimated from firgure in Hooke 1980,670,Barnes Ice Cap,RGI60-04.06187,1974-06-27,1974-06-27,True,,C4 (D4 in Hooke 1980),plot digitizer,
 76,225,digitized from plot,69.71965,-71.89204000000001,,estimated from firgure in Hooke 1980,670,Barnes Ice Cap,RGI60-04.06187,1974-06-14,1974-06-14,False,,B4,plot digitizer,
-78,226,from metadata,76.4113,-68.2873,,from aux data (Tuto_ramp_overview.png),505,Tuto Ramp,RGI60-05.07772,1962-08-15,1962-08-15,True,,D-11,import,redigitize??
+78,226,from metadata,76.4113,-68.2873,,from aux data (Tuto_ramp_overview.png),505,Tuto Ramp,RGI60-05.07772,1962-08-15,1962-08-15,True,,D-11,import,
 78,227,from metadata,71.306,-26.768,,estimated from position (caltopo),2325,Renland Ice Cap,RGI60-05.16072,1988-01-01,1988-12-31,False,,,import,
 78,228,from metadata,78.3897,-80.395,,estimated from position (caltopo),1600,Prince of Wales Ice Cap,RGI60-03.01708,2005-05-15,2005-05-15,True,,,import,
 78,229,from metadata,67.3,-65.2,,orig. publication (Fisher 1998),1810,Penny Ice Cap,RGI60-04.05688,1996-01-01,1996-12-31,True,,,import,
