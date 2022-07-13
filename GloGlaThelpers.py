@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import os
+import glob
+import matplotlib.pyplot as plt
+
 
 #read data from digizied database:
 def import_database(path):
@@ -101,7 +105,7 @@ def glacier_data(rgiid, rgi_outlines, sites):
     return glacier_outline, drill_sites, glacier_name
 
 #3. function to create the plot
-def glacier_plot(glacier_outline, drill_sites, gn):
+def glacier_plot(sites_temps, glacier_outline, drill_sites, gn):
     f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,6))
     f.suptitle(f"{gn}")
     drill_plot = drill_sites.plot(ax=ax1,
