@@ -3,6 +3,7 @@ import random
 import numpy as np
 import pickle
 import pandas as pd
+from pyproj import Proj, transform
 
 #load and construct database
 datapath ='/Users/mistral/git_repos/GloGlaT/'
