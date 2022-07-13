@@ -97,9 +97,10 @@ for r in rgi_regions:
     for id in glaciers_in_region:
         glacier_outline, drill_sites, gn = ggthelp.glacier_data(id, rgi_outlines, sites)
         #then create plot
-        f = ggthelp.glacier_plot(glacier_outline, drill_sites, gn)
-        f.savefig(f"/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/{gn}.pdf")
-        f.close()
+        f = ggthelp.glacier_plot(sites_temps, glacier_outline, drill_sites, gn)
+        f.savefig(f"/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/all_glaciers/{id}_{gn}.pdf")
+        plt.close(f)
+
 '''
 #plot individual measurement site (one plot per borehole)
 for i in set(zip(drill_sites.study_id, drill_sites.measurement_id)):
