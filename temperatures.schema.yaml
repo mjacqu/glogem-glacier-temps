@@ -1,0 +1,11 @@
+fields:
+  - type: integer
+    name: measurement_id
+    title: Measurement identifier
+  - type: number
+    name: temperature_degC
+    title: Temperature in degrees Celcius
+  - type: number
+    name: depth_m
+    title: Measurement depth in meters from the surface (positive increasing)
+foreignKeys: measurement_id

@@ -1,0 +1,58 @@
+fields:
+  - type: integer
+    name: study_id
+    title: Identifier
+  - type: integer
+    name: measurement_id
+    title: Identifier
+  - type: string
+    name: location_source
+    title: Source of location information
+  - type: number
+    name: y_lat
+    title: Y coordinate in local coordinate system or latitude
+  - type: number
+    name: x_lon
+    title: X coordinate in local coordinate system or longitude
+  - type: number
+    name: epsg
+    title: epsg code if coordinates are not EPSG:4326 (lat/lon)
+  - type: string
+    name: elevation_source
+    title: Source of elevation information if not published
+  - type: integer
+    name: elevation_masl
+    title: Elevation in meters above sea level
+  - type: string
+    name: glacier_name
+    title: Glacier name
+  - type: string
+    name: rgi_id
+    title: Randolph Glacier Invetory glacier id
+  - type: date
+    name: start_date
+    title: Start of measurement period
+    description: If only measurement year is known, this is the first day of the year;
+      if only measurement month is known, this is the first day of the month. If measurement
+      happend on a specific day, start_date is equal to end_date.
+  - type: date
+    name: end_date
+    title: End of measurement period
+    description: If only measurement year is known, this is the last day of the year;
+      if only measurement month is known, this is the last day of the month. If measurement
+      happend on a specific day, start_date is equal to end_date
+  - type: boolean
+    name: to_bottom
+    title: 'Borehole reached glacier bed: True or False'
+  - type: string
+    name: site_description
+    title: Description of measurement site
+    example: Ablation area; crater rim; summit region etc.
+  - type: string
+    name: notes
+    title: Additional notes
+  - type: string
+    name: extraction_method
+    title: Means by which data was obtained / added
+foreignKeys: study_id
+primaryKey: measurement_id

@@ -1,0 +1,20 @@
+fields:
+  - type: integer
+    name: study_id
+    title: Identifier
+  - type: string
+    name: first_author
+    title: Identifier of the neighbor
+  - type: integer
+    name: year
+    title: Name of the country
+  - type: string
+    name: title
+    title: Publication title
+  - type: boolean
+    name: catalogued
+    title: 'Data included in database: True or False'
+  - type: string
+    name: doi
+    title: Publication DOI
+primaryKey: study_id
