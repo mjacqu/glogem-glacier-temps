@@ -1,13 +1,13 @@
 fields:
-  - type: integer
+  - type: number
     name: study_id
-    title: Identifier
+    title: Study identifier
   - type: string
     name: first_author
     title: Identifier of the neighbor
   - type: integer
     name: year
-    title: Name of the country
+    title: Year of study publication
   - type: string
     name: title
     title: Publication title
