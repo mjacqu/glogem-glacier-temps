@@ -28,7 +28,7 @@ def import_database(path):
            'notes', 'extraction_method'],
            dtype={'y_lat':np.float64, 'x_lon':np.float64})
     temps = pd.read_csv(os.path.join(path, 'temperatures.csv'),
-        usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
+        usecols=['measurement_id', 'temperature_degC', 'depth_m'])
     #Check equivalence of all id's and indicate where there might be a problem
     siteids = list(zip(sites.study_id, sites.measurement_id))
     measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
