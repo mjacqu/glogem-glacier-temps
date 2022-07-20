@@ -35,10 +35,9 @@ for pf in pointfiles:
     model_elevation = float(re.findall(r"\d{3,4}", metadata)[0])
     pt = ggthelp.format_df(pt)
 
-
     #read data from validation data
     database_path ='/Users/mistral/git_repos/GloGlaT'
-    sites_temps = ggthelp.import_database(database_path)
+    sites_temps, sites = ggthelp.import_database(database_path)
 
     #plot measured vs. modeled for all validation sites:
     path = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
@@ -46,13 +45,14 @@ for pf in pointfiles:
         usecols=['rgi_id', 'elevation_masl'])
     validation_data = pd.merge(validation_sites, sites_temps, on=['rgi_id', 'elevation_masl'])
 
-
     elevation = validation_data[validation_data.rgi_id==rgi_id].elevation_masl.unique()
     closest_elevation = min(elevation, key=lambda x:abs(x-model_elevation))
     #years = set([d.year for d in validation_data[validation_data.rgi_id==rgi_id].date])
-
     measured = validation_data[(validation_data["rgi_id"]==rgi_id) & (validation_data["elevation_masl"]==closest_elevation)]
-    years = list(set([d.year for d in measured.date]))
+    #calcualte year for model run from
+    model_time = measured.start_date + (measured.end_date - measured.start_date)/2
+    measured=measured.assign(model_time = model_time)
+    years = list(set([d.year for d in measured.model_time]))
     year = [x for x in years if math.isnan(x)==False]
 
     #plot data at point by year
@@ -71,9 +71,9 @@ for pf in pointfiles:
         color=colors[c_ct]
     )
 
-    for i in set([m for m in measured.date]):
-        ax.plot(measured[measured.date==i]["temperature_degC"],
-        measured[measured.date==i]["depth_m"],
+    for i in set([m for m in measured.model_time]):
+        ax.plot(measured[measured.model_time==i]["temperature_degC"],
+        measured[measured.model_time==i]["depth_m"],
         linestyle=':', marker='.',
         label=f"{i} at {closest_elevation} m asl"
     )
@@ -84,5 +84,4 @@ for pf in pointfiles:
     ax.legend()
     ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]}) \n Model year {plot_year} \n Model elevation: {model_elevation}")
     f.gca().invert_yaxis()
-    f.show()
-    #f.savefig(f"{rgi_id}.png")
+    f.savefig(f"{rgi_id}.png")
