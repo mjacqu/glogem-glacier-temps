@@ -15,7 +15,7 @@ region_lut = pd.read_csv(os.path.join(datapath,'regionIDs.csv'), dtype=object)
 regions = [name for name in os.listdir(datapath) if os.path.isdir(os.path.join(datapath, name))]
 
 #test with one dataset
-region_name = 'WesternCanada'
+region_name = 'SouthAsiaEast'
 reg_id = ggthelp.get_region_id(region_name, region_lut)
 
 
@@ -26,7 +26,6 @@ pointfiles = [f for f in files if re.match(r"temp_P\d{1}_\d{5}.dat", f)]
 for pf in pointfiles:
     id = re.findall(r"\d{5}", pf)
     rgi_id = ggthelp.full_rgiid(id[0], reg_id)
-
 
     #read data from Matthias' output:
     depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259, 299]) #added 299 to make enough header lines
@@ -57,7 +56,7 @@ for pf in pointfiles:
     year = [x for x in years if math.isnan(x)==False]
 
     #plot data at point by year
-    f, ax = plt.subplots(figsize=(6,7))
+    f, ax = plt.subplots(figsize=(6,8))
     colors = plt.cm.Blues_r(np.linspace(0, 1, 18))
     c_ct = 0
     if year == [] or year[0]<1980:
@@ -85,4 +84,5 @@ for pf in pointfiles:
     ax.legend()
     ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]}) \n Model year {plot_year} \n Model elevation: {model_elevation}")
     f.gca().invert_yaxis()
-    f.savefig(f"{rgi_id}.png")
+    f.show()
+    #f.savefig(f"{rgi_id}.png")
