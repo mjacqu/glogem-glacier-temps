@@ -15,7 +15,7 @@ region_lut = pd.read_csv(os.path.join(datapath,'regionIDs.csv'), dtype=object)
 regions = [name for name in os.listdir(datapath) if os.path.isdir(os.path.join(datapath, name))]
 
 #test with one dataset
-region_name = 'CentralAsia'
+region_name = 'WesternCanada'
 reg_id = ggthelp.get_region_id(region_name, region_lut)
 
 
@@ -53,7 +53,7 @@ measured = validation_data[(validation_data["rgi_id"]==rgi_id) & (validation_dat
 #calcualte year for model run from
 model_time = measured.start_date + (measured.end_date - measured.start_date)/2
 measured=measured.assign(model_time = model_time)
-years = list(set([d.year for d in measured.model_time])) #rundabout way of ensuring that depth has only one more element than there are modeled temperaures
+years = list(set([d.year for d in measured.model_time]))
 year = [x for x in years if math.isnan(x)==False]
 
 #What to compare against? The mean of a given year?
@@ -64,14 +64,33 @@ else:
     plot_year = str(year[0])
 
 depth, model_mean = pt.columns, list(pt.loc[plot_year].mean())
-depth_idxs = [1,np.count_nonzero(~np.isnan(model_mean))+1]
-validation_depth = depth[:depth_idxs[1]]
 
-#1. get indexes of closest depths in model.
-def get_boundary_idxs(measured_depth, model_time, model_depth):
-    #for i in set([m for m in measured.model_time]):
-    m_t = np.unique(model_time)[0]
-    #for d in measured[measured.model_time==m_t]["depth_m"][1:].iteritems():
+#1. find overlapping subsets in modeled and measured dataframes
+def get_overlapping_data(validation_data, model_depth, model_temp):
+    if validation_data.depth_m.min() > model_depth[~np.isnan(model_temp)].min():
+        model_d = model_depth[model_depth < validation_data.depth_m.min()].max() #closest depth smaller than smallest measured depth
+        model_lb = list(model_depth).index(model_d)
+        meas_lb = validation_data[validation_data.depth_m == validation_data.depth_m.min()].index[0]
+    if validation_data.depth_m.min() < model_depth[~np.isnan(model_temp)].min():
+        meas_lb = next(x for x, value in enumerate(validation_data.depth_m) if value >= 1) #index of first value that is above 1 in measured data
+        model_lb = 0
+    if validation_data.depth_m.max() > model_depth[~np.isnan(model_temp)].max():
+        meas_d = validation_data.depth_m[validation_data.depth_m < model_depth[~np.isnan(model_temp)].max()].max() #highest measured values that is smaller than highest modeled depth
+        meas_ub = validation_data[validation_data.depth_m == meas_d].index[0]
+        model_ub = list(model_depth).index(model_depth[~np.isnan(model_temp)].max())
+    if validation_data.depth_m.max() < model_depth[~np.isnan(model_temp)].max():
+        model_d = model_depth[model_depth > validation_data.depth_m.max()].min() #next largest model depth
+        model_ub = list(model_depth).index(model_d)
+        meas_ub = validation_data[validation_data.depth_m == validation_data.depth_m.max()].index[0]
+    return model_lb, model_ub+1, meas_lb, meas_ub
+
+model_lb, model_ub, meas_lb, meas_ub = get_overlapping_data(measured[measured.model_time==model_time], depth, model_mean)
+validation_depth = depth[model_lb:model_ub]
+validation_temp = model_mean[model_lb:model_ub]
+validation_measured = measured.loc[meas_lb:meas_ub,:]
+
+#2. get indexes of closest depths in model.
+def get_boundary_idxs(measured_depth, model_depth):
     closest_value = min(model_depth, key=lambda x:abs(x-measured_depth[1]))
     #print(closest_value)
     #dir = closest_value - d[1]
@@ -84,7 +103,7 @@ def get_boundary_idxs(measured_depth, model_time, model_depth):
     return lower_idx, upper_idx
 
 
-# 2. get linear regression between the two depths-03_temperatures (y=mx+c)
+# 3. get linear regression between the two depths-03_temperatures (y=mx+c)
 def get_model_interpolation(lower_idx, upper_idx, model_depth, model_temp, measured_depth):
     x = [model_temp[lower_idx], model_temp[upper_idx]]
     y = [model_depth[lower_idx], model_depth[upper_idx]]
@@ -93,17 +112,17 @@ def get_model_interpolation(lower_idx, upper_idx, model_depth, model_temp, measu
     return interp_model_temp
 
 interp_temps = []
-for d in measured[measured.model_time==model_time]["depth_m"][depth_idxs[0]:depth_idxs[1]-2].iteritems():
-    lower_idx, upper_idx = get_boundary_idxs(d, model_time, validation_depth)
-    print(d[1], depth[lower_idx], depth[upper_idx])
-    interp_model_temp = get_model_interpolation(lower_idx, upper_idx, validation_depth, model_mean, d[1])
-    print(interp_model_temp)
+for d in validation_measured.depth_m.iteritems():
+    lower_idx, upper_idx = get_boundary_idxs(d, validation_depth)
+    #print(d[1], depth[lower_idx], depth[upper_idx])
+    interp_model_temp = get_model_interpolation(lower_idx, upper_idx, validation_depth, validation_temp, d[1])
+    #print(interp_model_temp)
     interp_temps.append(interp_model_temp)
 
-diffs = interp_temps - measured[measured.model_time==model_time]["temperature_degC"][depth_idxs[0]:depth_idxs[1]-2]
+diffs = interp_temps - validation_measured.temperature_degC
 rmse = np.sqrt(np.sum(diffs**2)/len(diffs))
-mask20 = validation_depth>=20
-diffs_20 = diffs[mask20[1:len(diffs)+1]]
+mask20 = validation_measured.depth_m>=20
+diffs_20 = diffs[mask20]
 rmse_20 = np.sqrt(np.sum(diffs_20**2)/len(diffs_20))
 
 #plot
@@ -121,7 +140,7 @@ else:
 #    ax.plot(pt.loc[i].T, depth,
 #    color=colors[c_ct]
 #)
-ax.scatter(interp_temps, measured[measured.model_time==model_time]["depth_m"][depth_idxs[0]:depth_idxs[1]-2], color='k', marker='+', label='interpolated points')
+ax.scatter(interp_temps, validation_measured.depth_m, color='k', marker='+', label='interpolated points')
 ax.plot(pt.loc[plot_year].mean(), depth, linestyle=':', marker='.', label='model')
 for i in set([m for m in measured.model_time]):
     ax.plot(measured[measured.model_time==i]["temperature_degC"],
