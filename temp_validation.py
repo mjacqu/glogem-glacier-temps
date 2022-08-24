@@ -6,6 +6,8 @@ import re
 import matplotlib.pyplot as plt
 import math
 import glob
+from scipy import interpolate
+
 
 #plt.plot()
 #plt.show()
@@ -65,24 +67,12 @@ for r in regions:
 
             depth, model_mean = pt.columns, list(pt.loc[plot_year].mean())
 
-            #1. find overlapping subsets in modeled and measured dataframes
+            f = interpolate.interp1d(depth, model_mean, bounds_error=False)
 
-            model_lb, model_ub, meas_lb, meas_ub = ggthelp.get_overlapping_data(measured[measured.model_time==model_time], depth, model_mean)
-            validation_depth = depth[model_lb:model_ub]
-            validation_temp = model_mean[model_lb:model_ub]
-            validation_measured = measured.loc[meas_lb:meas_ub,:]
-
-            interp_temps = []
-            for d in validation_measured.depth_m.iteritems():
-                lower_idx, upper_idx = ggthelp.get_boundary_idxs(d, validation_depth)
-                #print(d[1], depth[lower_idx], depth[upper_idx])
-                interp_model_temp = ggthelp.get_model_interpolation(lower_idx, upper_idx, validation_depth, validation_temp, d[1])
-                #print(interp_model_temp)
-                interp_temps.append(interp_model_temp)
-
-            diffs = interp_temps - validation_measured.temperature_degC
+            T_interp = f(measured.depth_m)
+            diffs = T_interp - measured.temperature_degC
             rmse = np.sqrt(np.sum(diffs**2)/len(diffs))
-            mask20 = validation_measured.depth_m>=20
+            mask20 = measured.depth_m>=20
             diffs_20 = diffs[mask20]
             rmse_20 = np.sqrt(np.sum(diffs_20**2)/len(diffs_20))
 
@@ -101,7 +91,7 @@ for r in regions:
             #    ax.plot(pt.loc[i].T, depth,
             #    color=colors[c_ct]
             #)
-            ax.scatter(interp_temps, validation_measured.depth_m, color='k', marker='+', label='interpolated points')
+            ax.scatter(T_interp, measured.depth_m, color='k', marker='+', label='interpolated points')
             ax.plot(pt.loc[plot_year].mean(), depth, linestyle=':', marker='.', label='model')
             for i in set([m for m in measured.model_time]):
                 ax.plot(measured[measured.model_time==i]["temperature_degC"],
