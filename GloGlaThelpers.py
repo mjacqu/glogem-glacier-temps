@@ -143,7 +143,7 @@ def glacier_plot(sites_temps, glacier_outline, drill_sites, gn):
 #get glacier name from rgi id
 def full_rgiid(rgiid, region_id):
     """
-    return the full rgiid from region and rgi_id
+    return the full rgiid from region and rgi_id 
     """
     full_id = f"RGI60-{region_id}.{rgiid}"
     return full_id
