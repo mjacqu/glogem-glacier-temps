@@ -39,12 +39,10 @@ def import_database(path):
         print("IDs mismatch: ignoring following entries:")
         print(testids)
         #ignore entries that were found to mismatch before doing join:
-        ignoreids = siteids.index(testids.pop())
-        sites = sites.drop(index = ignoreids, axis = 0)
     else:
         print('IDs match!')
     # join sites and temps on study_id and measurement_id keys
-    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'])
+    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'], how='inner')
     sites_temps.start_date = pd.to_datetime(sites_temps.start_date)
     sites_temps.end_date = pd.to_datetime(sites_temps.end_date)
     sites.start_date = pd.to_datetime(sites.start_date)
