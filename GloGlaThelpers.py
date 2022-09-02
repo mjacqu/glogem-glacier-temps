@@ -33,12 +33,14 @@ def import_database(path):
     siteids = list(zip(sites.study_id, sites.measurement_id))
     measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
     #testids = [i for i, j in zip(siteids, measurementids) if i != j] #doesn't catch issue if lists are different lengths
-    testids = set(siteids) - set(measurementids)
+    testids = list(set(siteids) - set(measurementids))
     print("Check whether all tables list same IDs, drop ones that are not in all tables")
     if len(testids) > 0:
         print("IDs mismatch: ignoring following entries:")
         print(testids)
-        #ignore entries that were found to mismatch before doing join:
+        #ignore entries that were found to mismatch in sites:
+        ignoreids = [siteids.index(p) for p in testids]
+        sites = sites.drop(index = ignoreids, axis = 0)
     else:
         print('IDs match!')
     # join sites and temps on study_id and measurement_id keys
