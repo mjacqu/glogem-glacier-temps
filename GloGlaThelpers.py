@@ -20,7 +20,7 @@ def import_database(path):
     joined database as pandas dataframe
     """
     studies = pd.read_csv(os.path.join(path,'studies.csv'),
-        usecols=['study_id', 'first_author', 'year', 'title', 'catalogued'])
+        usecols=['study_id', 'first_author', 'year', 'title', 'included', 'url'])
     sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
         usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
            'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
@@ -143,7 +143,7 @@ def glacier_plot(sites_temps, glacier_outline, drill_sites, gn):
 #get glacier name from rgi id
 def full_rgiid(rgiid, region_id):
     """
-    return the full rgiid from region and rgi_id 
+    return the full rgiid from region and rgi_id
     """
     full_id = f"RGI60-{region_id}.{rgiid}"
     return full_id
