@@ -34,13 +34,17 @@ sites = sites.assign(site_coords = drill_site)
 
 sites = sites.drop(columns=['location_source', 'y_lat', 'x_lon', 'epsg', 'elevation_source', 'extraction_method'])
 
+mathias_df = sites.to_csv('input_Matthias.csv', index=False)
 # Generate list of Id's used for model tuning
-#max_index = sites_temps.measurement_id.max()
-#tuning_sample_id = np.sort(random.sample(range(max_index), int(np.floor(max_index/2))))
-#pickle.dump(tuning_sample_id, open("tuning_ids.p", "wb"))
+# Decided against this: can do the filtering later
+'''
+max_index = sites_temps.measurement_id.max()
+tuning_sample_id = np.sort(random.sample(range(max_index), int(np.floor(max_index/2))))
+pickle.dump(tuning_sample_id, open("tuning_ids.p", "wb"))
 
 tuning_ids = pickle.load( open("tuning_ids.p", "rb"))
 
 tuning_df = sites[sites.measurement_id.isin(tuning_ids)]
 
 tuning_df.to_csv('tuning_data.csv')
+'''
