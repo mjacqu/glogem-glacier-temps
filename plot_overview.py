@@ -8,6 +8,7 @@ import math
 import glob
 from pyproj import Proj, transform
 from shapely.geometry import Point
+from matplotlib import cm
 import re
 import GloGlaThelpers as ggthelp
 
@@ -54,10 +55,14 @@ for code,coords in zip(sites.epsg.iteritems(), (zip(sites.x_lon, sites.y_lat))):
     else:
         drill_site.append(coords)
 
+
 sites['drill_sites'] = gpd.GeoSeries([Point(coord[0], coord[1]) for coord in drill_site])
 
 sites = gpd.GeoDataFrame(sites)
-#create colormap
+
+#set colormap to red for values over vmax
+cmap=cm.get_cmap('Blues_r')
+cmap.set_over('lightcoral')
 
 #sites = sites.set_geometry('drill_sites')
 sites = sites.set_geometry('glacier_centerpt')
@@ -68,17 +73,17 @@ rgi.geometry.plot(ax=ax, color='cyan')
 t_plot = sites.plot(ax=ax,
     column='mean_temp',
     cmap='Blues_r',
-    vmin=-20, vmax=0,
+    vmin=-20, vmax=-0.25,
     markersize=25,
     legend=True,
-    legend_kwds={'label':'Temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15},
+    legend_kwds={'label':'Temperature', 'orientation':'horizontal', 'fraction':0.04, 'pad':0.15, 'extend':'both'},
     edgecolor='k'
 )
 ax.set_ylim([-60,90])
 ax.set_xlim([-180,180])
 f.tight_layout()
+f.show()
 f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/thermal_regimes.pdf")
-#f.savefig('thermal_regimes.pdf')
 
 #Plot boreholes sites on individual glaciers
 # Now iterate over all regions and save out figure for each glacier
