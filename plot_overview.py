@@ -82,7 +82,6 @@ t_plot = sites.plot(ax=ax,
 ax.set_ylim([-60,90])
 ax.set_xlim([-180,180])
 f.tight_layout()
-f.show()
 f.savefig("/Users/mistral/Documents/ETHZ/Science/PROGRESS/outputs/thermal_regimes.pdf")
 
 #Plot boreholes sites on individual glaciers
