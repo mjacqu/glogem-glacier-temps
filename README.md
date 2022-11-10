@@ -9,7 +9,7 @@ As part of a project aimed at estimating the temperature regime for all RGI glac
 - [`measurement_info.csv`](measurement_info.csv):
 Metadata about each individual temperature profile.
 
-- [`temperatures.csv`](temperatures.csv):
+- [`data.csv`](data.csv):
 Depth vs. temperature data linked to the the data in `measurement_info.csv` and `studies.csv` via `study_id` and `measurement_id`
 
 ## How to contribute
