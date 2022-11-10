@@ -1,0 +1,55 @@
+name: GloGlaT
+version: 0.1
+created: '2022-10-27T15:17:45Z'
+title: Global englacial temperature database (GloGlaT)
+description: |-
+  Englacial temperature database compiled from digitized and submitted englacial temperature measurements.
+languages:
+  - en
+licenses:
+  - title: Creative Commons Attribution 4.0 International
+    name: CC-BY-4.0
+    path: https://creativecommons.org/licenses/by/4.0
+contributors:
+  - title: Mylène Jacquemart
+    organization: 'Laboratory of hydraulics, hydrology, and glaciology (VAW), ETH Zurich, Switzerland'
+    role: author
+  - title: Guillem Carcanade
+    organization: 'Laboratory of hydraulics, hydrology, and glaciology (VAW), ETH Zurich, Switzerland'
+    role: author
+resources:
+  - name: studies
+    title: Studies
+    description: All studies that were considerd in the compilation of this database.
+    path: studies.csv
+    format: csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: study_id
+          type: integer
+          title: Study identifier
+          constratins:
+            required: true
+            unique: true
+        - name: first_author
+          type: string
+          title: Identifier of the first author
+        - name: year
+          type: integer
+          title: Year of study publication
+        - name: title
+          type: string
+          title: Publication title
+        - name: catalogued
+          type: boolean
+          title: 'Data included in database: True or False'
+        - name: url
+          type: string
+          title: Publication url
+      primaryKey: ['study_id']
+  - name: measurement_info
+    title: Measurement info
+    description: Metadata about each individual temperature profile.
+    path: measurement_info.csv
+    
