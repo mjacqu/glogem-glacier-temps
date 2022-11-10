@@ -24,10 +24,10 @@ def import_database(path):
     sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
         usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
            'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
-            'start_date', 'end_date', 'to_bottom', 'site_description',
+            'start_date', 'end_date', 'published_accuracy', 'to_bottom', 'site_description',
            'notes', 'extraction_method'],
            dtype={'y_lat':np.float64, 'x_lon':np.float64})
-    temps = pd.read_csv(os.path.join(path, 'temperatures.csv'),
+    temps = pd.read_csv(os.path.join(path, 'data.csv'),
         usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
     #Check equivalence of all id's and indicate where there might be a problem
     siteids = list(zip(sites.study_id, sites.measurement_id))
