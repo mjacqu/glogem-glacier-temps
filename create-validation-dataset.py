@@ -32,7 +32,7 @@ for code,coords in zip(sites.epsg.iteritems(), (zip(sites.x_lon, sites.y_lat))):
 
 sites = sites.assign(site_coords = drill_site)
 
-sites = sites.drop(columns=['location_source', 'y_lat', 'x_lon', 'epsg', 'elevation_source', 'extraction_method'])
+sites = sites.drop(columns=['location_source', 'y_lat', 'x_lon', 'epsg', 'elevation_source', 'published_accuracy', 'extraction_method'])
 
 mathias_df = sites.to_csv('input_Matthias.csv', index=False)
 # Generate list of Id's used for model tuning
