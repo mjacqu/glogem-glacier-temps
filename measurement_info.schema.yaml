@@ -34,7 +34,8 @@ fields:
     title: Start of measurement period
     description: If only measurement year is known, this is the first day of the year;
       if only measurement month is known, this is the first day of the month. If measurement
-      happend on a specific day, start_date is equal to end_date.
+      happend on a specific day, start_date is equal to end_date. If only drill-date is known, this is
+      recorded as the date.
   - type: date
     name: end_date
     title: End of measurement period

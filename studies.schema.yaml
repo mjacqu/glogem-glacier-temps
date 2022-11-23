@@ -17,4 +17,4 @@ fields:
   - type: string
     name: doi
     title: Publication DOI
-primaryKey: study_id
+primaryKey: ['study_id']
