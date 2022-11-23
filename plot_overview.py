@@ -39,7 +39,15 @@ sites['mean_temp'] = sites_temps.groupby(['measurement_id']).temperature_degC.me
 
 # add corresponding center_lat/long to sites from rgi_pts
 rgi_attribs_gdf = gpd.GeoDataFrame(rgi_attribs, geometry=gpd.points_from_xy(rgi_attribs.CenLon,rgi_attribs.CenLat))
-sites['glacier_centerpt'] = pd.DataFrame([rgi_attribs_gdf[rgi_attribs_gdf['RGIId']==g].geometry.values for g in sites['rgi_id']]) #get rgi centerpoint coordinates for each entry
+
+rgi_attribs_gdf.set_index('RGIId').loc[sites['rgi_id'], 'geometry']
+sites = sites.merge(
+    rgi_attribs_gdf[['RGIId', 'geometry']].rename(columns={'geometry': 'glacier_centerpt'}),
+    how='left',
+    left_on='rgi_id',
+    right_on='RGIId',
+    validate='many_to_one'
+)
 
 
 #add geometry of measurement site
@@ -65,7 +73,7 @@ cmap=cm.get_cmap('Blues_r')
 cmap.set_over('lightcoral')
 
 #sites = sites.set_geometry('drill_sites')
-sites = sites.set_geometry('glacier_centerpt')
+sites = sites.set_geometry('drill_sites')
 #plot overview map
 f, ax = plt.subplots(figsize=(12,6))
 world.plot(ax=ax, color='white', edgecolor='silver', zorder=1)
