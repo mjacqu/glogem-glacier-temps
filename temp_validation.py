@@ -8,105 +8,99 @@ import math
 import glob
 from scipy import interpolate
 
-
-#plt.plot()
-#plt.show()
-
-datapath = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data/firnice_temperature'
-region_lut = pd.read_csv(os.path.join(datapath,'regionIDs.csv'), dtype=object)
+datapath = '/scratch_net/iceberg_second/mhuss/r6spec_global_results/'
+repo_path = '.'
+region_lut = pd.read_csv(os.path.join(repo_path,'regionIDs.csv'), dtype=object)
 regions = [name for name in os.listdir(datapath) if os.path.isdir(os.path.join(datapath, name))]
+sites_temps, sites = ggthelp.import_database(repo_path)
 
 for r in regions:
     try:
         reg_id = ggthelp.get_region_id(r, region_lut)
+        print(f"Running region {r}")
+        #for the given region, find the temps simulated at the boreholes
+        subdir ='PAST/firnice_temperature/'
+        filepath = os.path.join(os.path.join(datapath,r), subdir)
+        files = os.listdir(filepath)
+    except FileNotFoundError:
+        print(f"No glaciers in region {r}, moving on")
+        continue
 
+    pointfiles = [f for f in files if re.match(r"temp_ID\d+_\d{5}.dat", f)]
 
-        #figure out which glacier is being used
-        files = os.listdir(os.path.join(datapath, r))
-        pointfiles = [f for f in files if re.match(r"temp_P\d{1}_\d{5}.dat", f)]
+    for pf in pointfiles:
+    #pf = pointfiles[0]
+        id = re.findall(r"\d{5}", pf)
+        rgi_id = ggthelp.full_rgiid(id[0], reg_id)
 
-        for pf in pointfiles:
-        #pf = pointfiles[0]
-            id = re.findall(r"\d{5}", pf)
-            rgi_id = ggthelp.full_rgiid(id[0], reg_id)
+        #read data from Matthias' output:
+        depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259, 299]) #added 299 to make enough header lines
+        header_pt = ['Year', 'Month'] + depth
 
-            #read data from Matthias' output:
-            depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259, 299]) #added 299 to make enough header lines
-            header_pt = ['Year', 'Month'] + depth
+        pt, metadata = ggthelp.read_depth_temps(os.path.join(filepath,f"{pf}"), header_pt, 1)
+        model_elevation = float(re.findall(r"\d+", metadata)[0])
+        pt = ggthelp.format_df(pt)
+        pt_id = int(re.search(r"_ID(\d+)_", pf).group(1))
 
-            pt, metadata = ggthelp.read_depth_temps(os.path.join(datapath,f"{r}/{pf}"), header_pt, 1)
-            model_elevation = float(re.findall(r"\d{3,4}", metadata)[0])
-            pt = ggthelp.format_df(pt)
+        measured = sites_temps[sites_temps.measurement_id == pt_id]
+        if len(measured) == 0:
+            continue
 
-            #read data from validation data
-            database_path ='/Users/mistral/git_repos/GloGlaT'
-            sites_temps, sites = ggthelp.import_database(database_path)
+        #calcualte year for model run from
+        model_time = measured.start_date + (measured.end_date - measured.start_date)/2
+        measured=measured.assign(model_time = model_time)
+        years = list(set([d.year for d in measured.model_time]))
+        year = [x for x in years if math.isnan(x)==False]
 
-            #plot measured vs. modeled for all validation sites:
-            path = '/Users/mistral/Documents/ETHZ/Science/PROGRESS/data'
-            validation_sites = pd.read_csv(os.path.join(path, "initial_test_glaciers.csv"),
-                usecols=['rgi_id', 'elevation_masl'])
-            validation_data = pd.merge(validation_sites, sites_temps, on=['rgi_id', 'elevation_masl'])
+        #What to compare against? The mean of a given year?
+        if year == [] or year[0]<1980:
+            plot_year = '1990'
+            print(f"BH #{pt_id} no modeled data: using 1990")
+        else:
+            plot_year = str(year[0])
+            print(f"BH # {pt_id} in year {plot_year}")
 
-            elevation = validation_data[validation_data.rgi_id==rgi_id].elevation_masl.unique()
-            closest_elevation = min(elevation, key=lambda x:abs(x-model_elevation))
-            #years = set([d.year for d in validation_data[validation_data.rgi_id==rgi_id].date])
-            measured = validation_data[(validation_data["rgi_id"]==rgi_id) & (validation_data["elevation_masl"]==closest_elevation)]
-            #calcualte year for model run from
-            model_time = measured.start_date + (measured.end_date - measured.start_date)/2
-            measured=measured.assign(model_time = model_time)
-            years = list(set([d.year for d in measured.model_time]))
-            year = [x for x in years if math.isnan(x)==False]
+        depth, model_mean = pt.columns, list(pt.loc[plot_year].mean())
 
-            #What to compare against? The mean of a given year?
-            if year == [] or year[0]<1980:
-                plot_year = '1990'
-                print('no modeled data: using 1990')
-            else:
-                plot_year = str(year[0])
+        f = interpolate.interp1d(depth, model_mean, bounds_error=False)
 
-            depth, model_mean = pt.columns, list(pt.loc[plot_year].mean())
-
-            f = interpolate.interp1d(depth, model_mean, bounds_error=False)
-
-            T_interp = f(measured.depth_m)
-            diffs = T_interp - measured.temperature_degC
+        T_interp = f(measured.depth_m)
+        diffs = T_interp - measured.temperature_degC
+        try:
             rmse = np.sqrt(np.sum(diffs**2)/len(diffs))
-            mask20 = measured.depth_m>=20
-            diffs_20 = diffs[mask20]
+        except ZeroDivisionError:
+            rmse_20 = np.nan
+        mask20 = measured.depth_m>=20
+        diffs_20 = diffs[mask20]
+        try:
             rmse_20 = np.sqrt(np.sum(diffs_20**2)/len(diffs_20))
+        except ZeroDivisionError:
+            rmse_20 = np.nan
+        #plot
+        f, ax = plt.subplots(figsize=(6,9))
+        colors = plt.cm.Blues_r(np.linspace(0, 1, 18))
+        c_ct = 0
+        if year == [] or year[0]<1980:
+            plot_year = '1990'
+        else:
+            plot_year = str(year[0])
 
-            #plot
-            f, ax = plt.subplots(figsize=(6,9))
-            colors = plt.cm.Blues_r(np.linspace(0, 1, 18))
-            c_ct = 0
-            if year == [] or year[0]<1980:
-                plot_year = '1990'
-                print('no modeled data: using 1990')
-            else:
-                plot_year = str(year[0])
+        ax.scatter(T_interp, measured.depth_m, color='k', marker='+', label='interpolated points')
+        ax.plot(pt.loc[plot_year].mean(), depth,
+            linestyle=':', marker='.',
+            label=f"model BH{pt_id}"
+        )
+        ax.plot(measured.temperature_degC, measured.depth_m,
+            linestyle=':', marker='.',
+            label=f"measured at BH {measured.measurement_id.unique()[0]}"
+        )
 
-            #for i in pt.loc[plot_year].T:
-            #    c_ct += 1
-            #    ax.plot(pt.loc[i].T, depth,
-            #    color=colors[c_ct]
-            #)
-            ax.scatter(T_interp, measured.depth_m, color='k', marker='+', label='interpolated points')
-            ax.plot(pt.loc[plot_year].mean(), depth, linestyle=':', marker='.', label='model')
-            for i in set([m for m in measured.model_time]):
-                ax.plot(measured[measured.model_time==i]["temperature_degC"],
-                measured[measured.model_time==i]["depth_m"],
-                linestyle=':', marker='.',
-                label=f"{i} at {closest_elevation} m asl"
-            )
 
-            ax.set_xlabel('Temperature (°C)')
-            ax.set_ylabel('Depth (m)')
-            ax.xaxis.tick_top()
-            ax.legend()
-            ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]}) \n Model year {plot_year} \n Model elevation: {model_elevation} \n RMSE: {rmse:.2f}, RMSE20: {rmse_20:.2f}")
-            f.gca().invert_yaxis()
-            f.savefig(f"Val_{r}_{id[0]}.png")
-
-    except ValueError:
-        print(f"Glacier {id} in {r} failed, moving on")
+        ax.set_xlabel('Temperature (°C)')
+        ax.set_ylabel('Depth (m)')
+        ax.xaxis.tick_top()
+        ax.legend()
+        ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]} borehole #{pt_id}) \n Model year {plot_year} \n Model elevation: {model_elevation} \n RMSE: {rmse:.2f}, RMSE20: {rmse_20:.2f}")
+        f.gca().invert_yaxis()
+        f.savefig(f"{pt_id}_validation.png")
+        plt.close(f)
