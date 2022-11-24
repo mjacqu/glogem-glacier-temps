@@ -102,5 +102,5 @@ for r in regions:
         ax.legend()
         ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]} borehole #{pt_id}) \n Model year {plot_year} \n Model elevation: {model_elevation} \n RMSE: {rmse:.2f}, RMSE20: {rmse_20:.2f}")
         f.gca().invert_yaxis()
-        f.savefig(f"{pt_id}_validation.png")
+        f.savefig(f"Temp_val_outputs/{pt_id}_validation.png")
         plt.close(f)
