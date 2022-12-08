@@ -1,0 +1,41 @@
+name: test
+version: 0.1
+created: '2022-12-01T15:17:45Z'
+title: Frictionless test
+description: test dataset
+resources:
+  - name: candidates
+    path: candidates.csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: student_ID
+          type: integer
+          constraints:
+            unique: true
+            required: true
+        - name: first_name
+          type: string
+        - name: last_name
+          type: string
+        - name: DOB
+          type: date
+          format: '%Y-%m-%d'
+    primaryKey: ['student_ID']
+  - name: grades
+    path: grades.csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: student_ID
+          type: integer
+          constraints:
+            required: true
+        - name: class
+          type: string
+        - name: grade
+          type: number
+          constraints:
+            maximum: 6.0
+            minimum: 1.0
+      ForeignKeys: ['student_ID']
