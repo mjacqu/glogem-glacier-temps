@@ -1,7 +1,7 @@
-name: GloGlaT
+name: glenglat
 version: 0.1
 created: '2022-10-27T15:17:45Z'
-title: Global englacial temperature database (GloGlaT)
+title: Global englacial temperature database (glenglat)
 description: |-
   Englacial temperature database compiled from digitized and submitted englacial temperature measurements.
 languages:
@@ -41,15 +41,119 @@ resources:
         - name: title
           type: string
           title: Publication title
-        - name: catalogued
+        - name: included
           type: boolean
           title: 'Data included in database: True or False'
         - name: url
           type: string
           title: Publication url
       primaryKey: ['study_id']
-  - name: measurement_info
-    title: Measurement info
-    description: Metadata about each individual temperature profile.
-    path: measurement_info.csv
-    
+      missing values: ['']
+  - name: boreholes
+    title: Borehole infos
+    description: Metadata about each individual borehole and temperature profile.
+    path: boreholes.csv
+    format: csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: study_id
+          type: integer
+          title: Study identifier
+          constratins:
+            required: true
+            unique: true
+        - name: measurement_id
+          type: integer
+          title: Measurement Identifier
+          constraints:
+            required: true
+            unique: true
+        - name: location_source
+          type: string
+          title: Source of location data
+          description: Data source used to approximate borehole location if not published
+        - name: y_lat
+          type: number
+          description: Latitude or Y (north-south) coordinate
+        - name: x_lon
+          type: number
+          description: Longitude or X (east-west) coordinate
+        - name: epsg
+          type: integer
+          title: EPSG code
+          description: EPSG code of X and Y coordinates if not lat/long (EPSG 4326)
+        - name: elevation_source
+          type: string
+          title: Source of elevation data
+          description: Data source used to approximate borehole location if not published
+        - name: elevation_masl
+          type: number
+          title: Borehole elevation
+          description: elevation in meters above sea-level
+          constraints:
+            maximum: 9999.0
+        - name: glacier_name
+          type: string
+          title: Glacier name
+          description: Common glacier or icecap name if known
+        - name: rgi_id
+          type: string
+          title: RGI-ID
+          description: Randolph Glacier Inventory ID from RGI 6.0
+        - name: start_date
+          type: date
+          format: '%Y-%m-%d'
+          title: Start date
+          description: First date of temperature measurement or, if not known precisely, the earliest possible date (e.g. '2019' -> '2019-01-01').
+        - name: last_date
+          type: date
+          format: '%Y-%m-%d'
+          title: End date
+          description: Last date of temperature measurement or, if not known precisely, the latest possible date (e.g. '2019' -> '2019-12-31').
+        - name: published_accuracy
+          type: number
+          title: Published accuracy
+          description: If published, accuracy of original temperature measurement
+        - name: to_bottom
+          type: boolean
+          title: To bottom
+          description: Indication whether borehole reached bedrock (true, false, or unknown)
+        - name: site_description
+          type: string
+          title: Site description
+          description: Description of site area (e.g. accumulation or ablation area, summit region etc.)
+        - name: notes
+          type: string
+          title: Notes
+          description: Any additional notes about borehole location or measurement
+        - name: extraction_method
+          type: string
+          title: Extraction method
+          description: how data was obtained (plot digitizer or import)
+      primaryKey: ['measurement_id']
+      foreignKey: ['study_id']
+  - name: temperatures.csv
+    title: Temperatures
+    description: Temperature and depth measurements
+    path: temperatures.csv
+    format: csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: study_id
+          type: integer
+          title: Study ID
+        - name: measurement_id
+          type: integer
+          title: Measurement ID
+          constraints:
+            required: true
+        - name: temperature_degC
+          type: number
+          title: Temperature
+          description: temperature measurement in degrees C
+        - name: depth_m
+          type: number
+          title: Depth
+          description: depth measurement in meters
