@@ -7,12 +7,15 @@ import matplotlib.pyplot as plt
 import math
 import glob
 from scipy import interpolate
+import json
 
 datapath = '/scratch_net/iceberg_second/mhuss/r6spec_global_results/'
 repo_path = '.'
 region_lut = pd.read_csv(os.path.join(repo_path,'regionIDs.csv'), dtype=object)
 regions = [name for name in os.listdir(datapath) if os.path.isdir(os.path.join(datapath, name))]
 sites_temps, sites = ggthelp.import_database(repo_path)
+with open('calval.json') as json_file:
+    calval = json.load(json_file)
 
 for r in regions:
     try:
@@ -25,8 +28,16 @@ for r in regions:
     except FileNotFoundError:
         print(f"No glaciers in region {r}, moving on")
         continue
-
-    pointfiles = [f for f in files if re.match(r"temp_ID\d+_\d{5}.dat", f)]
+    dict = next(item for item in calval if item["region"] == r)
+    cal_ids = dict['cal_val'][0]['cal']
+    pointfiles = []
+    for f in files:
+        f_id = re.findall(r"_ID(\d+)_", f)
+        if len(f_id)==0:
+            continue
+        if int(f_id[0]) in cal_ids:
+            pointfiles.append(f)
+    #pointfiles = [f for f in files if re.match(r"temp_ID\d+_\d{5}.dat", f)]
 
     for pf in pointfiles:
     #pf = pointfiles[0]
