@@ -4,6 +4,7 @@ import geopandas as gpd
 import os
 import glob
 import matplotlib.pyplot as plt
+import re
 
 
 #read data from digizied database:
@@ -154,3 +155,22 @@ def get_region_id(region_name, lut):
     get region id from look up table of region names and IDs
     """
     return lut[lut['region-name']==region_name]['rgi-reg'].iat[0]
+
+#Data calibration and validation
+def cal_ids_in_region(datapath, r, region_lut, calval):
+    reg_id = get_region_id(r, region_lut)
+    print(f"Running region {r}")
+    #for the given region, find the temps simulated at the boreholes
+    subdir ='PAST/firnice_temperature/'
+    filepath = os.path.join(os.path.join(datapath,r), subdir)
+    files = os.listdir(filepath)
+    dict = next(item for item in calval if item["region"] == r)
+    cal_ids = dict['cal_val'][0]['cal']
+    pointfiles = []
+    for f in files:
+        f_id = re.findall(r"_ID(\d+)_", f)
+        if len(f_id)==0:
+            continue
+        if int(f_id[0]) in cal_ids:
+            pointfiles.append(f)
+    return pointfiles, reg_id, filepath
