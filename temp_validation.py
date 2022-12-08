@@ -19,25 +19,10 @@ with open('calval.json') as json_file:
 
 for r in regions:
     try:
-        reg_id = ggthelp.get_region_id(r, region_lut)
-        print(f"Running region {r}")
-        #for the given region, find the temps simulated at the boreholes
-        subdir ='PAST/firnice_temperature/'
-        filepath = os.path.join(os.path.join(datapath,r), subdir)
-        files = os.listdir(filepath)
+        pointfiles, reg_id, filepath = ggthelp.cal_ids_in_region(datapath, r, region_lut, calval)
     except FileNotFoundError:
         print(f"No glaciers in region {r}, moving on")
         continue
-    dict = next(item for item in calval if item["region"] == r)
-    cal_ids = dict['cal_val'][0]['cal']
-    pointfiles = []
-    for f in files:
-        f_id = re.findall(r"_ID(\d+)_", f)
-        if len(f_id)==0:
-            continue
-        if int(f_id[0]) in cal_ids:
-            pointfiles.append(f)
-    #pointfiles = [f for f in files if re.match(r"temp_ID\d+_\d{5}.dat", f)]
 
     for pf in pointfiles:
     #pf = pointfiles[0]
