@@ -44,7 +44,7 @@ def import_database(path):
     else:
         print('IDs match!')
     # join sites and temps on study_id and measurement_id keys
-    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'], how='inner').reset_index()
+    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'], how='inner').reset_index(drop=True)
     sites_temps.start_date = pd.to_datetime(sites_temps.start_date)
     sites_temps.end_date = pd.to_datetime(sites_temps.end_date)
     sites.start_date = pd.to_datetime(sites.start_date)
