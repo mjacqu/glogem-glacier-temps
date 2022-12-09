@@ -5,6 +5,8 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import re
+from scipy import interpolate
+import math
 
 
 #read data from digizied database:
@@ -157,14 +159,34 @@ def get_region_id(region_name, lut):
     return lut[lut['region-name']==region_name]['rgi-reg'].iat[0]
 
 #Data calibration and validation
-def cal_ids_in_region(datapath, r, region_lut, calval):
-    reg_id = get_region_id(r, region_lut)
-    print(f"Running region {r}")
-    #for the given region, find the temps simulated at the boreholes
+
+def get_file_locations(region, region_lut, datapath):
+    print(f"Running region {region}")
+    reg_id = get_region_id(region, region_lut)
     subdir ='PAST/firnice_temperature/'
-    filepath = os.path.join(os.path.join(datapath,r), subdir)
+    filepath = os.path.join(os.path.join(datapath,region), subdir)
+    return filepath, reg_id
+
+#identify relevant files
+def cal_ids_in_region(filepath, region, reg_id, calval):
+    '''
+    Identify all files that belong to the calibration subset for a certain region
+    from GloGem outputs.
+
+    Parameters:
+    datapath (str):     path to overarching directory
+    r (str):            region name
+    region_lut (df):    Dataframe with RGI region names and region numbers
+    calval (list):      List of dicts with calibration and validation IDs for each region
+
+    Returns:
+    pointfiles (list):  List of all calibration filenames
+    reg_id (int):       Region id
+    filepath (str):     path to file
+    '''
+    #for the given region, find the temps simulated at the boreholes
     files = os.listdir(filepath)
-    dict = next(item for item in calval if item["region"] == r)
+    dict = next(item for item in calval if item["region"] == region)
     cal_ids = dict['cal_val'][0]['cal']
     pointfiles = []
     for f in files:
@@ -173,4 +195,64 @@ def cal_ids_in_region(datapath, r, region_lut, calval):
             continue
         if int(f_id[0]) in cal_ids:
             pointfiles.append(f)
-    return pointfiles, reg_id, filepath
+    return pointfiles
+
+# get all necessary ids for individual pointfile
+def get_pointfile_ids(pf, reg_id):
+    id = re.findall(r"\d{5}", pf)
+    rgi_id = full_rgiid(id[0], reg_id)
+    pt_id = int(re.search(r"_ID(\d+)_", pf).group(1))
+    return rgi_id, pt_id
+
+
+# create calibration dataset from measured and modeled dataset
+def build_calval_data(pf, pt_id, reg_id, rgi_id, filepath, sites_temps):
+    '''
+    Create a calibration dataset from measured and modeled data. Modeled data is
+    averaged to a yearly mean for the modeled data. If measured data is > 1980,
+    model data from 1990 is used. Model data is interpolated to measured depths for
+    comparison.
+
+    Parameters:
+    pf (str):       filename of calibration (or validation) file
+    reg_id (int):   RGI region ID
+    filepath (str): path to overarching directory with files for that region
+
+    Returns:
+    measured:       data from database for this borehole ID
+    T_interp:       modeled data interpolated to depths from measurements
+    pt:             un-interpolated, modeled point data
+    depth:          modeled depths #FIXXXXXXX!!!!!
+    year:           year of model data used for comparison (year of measurement, unless year < 1980)
+
+    '''
+    #read data from Matthias' output:
+    depth = list([1,2,3,4,5,6,7,8,9,14,19,24,29,34,39,44,49,54,59,79,99,119,139,159,179,199,219,239,259, 299]) #added 299 to make enough header lines
+    header_pt = ['Year', 'Month'] + depth
+
+    pt, metadata = read_depth_temps(os.path.join(filepath,f"{pf}"), header_pt, 1)
+    model_elevation = float(re.findall(r"\d+", metadata)[0])
+    pt = format_df(pt)
+
+
+    measured = sites_temps[sites_temps.measurement_id == pt_id]
+
+    #calcualte year for model run from
+    model_time = measured.start_date + (measured.end_date - measured.start_date)/2
+    measured=measured.assign(model_time = model_time)
+    years = list(set([d.year for d in measured.model_time]))
+    year = [x for x in years if math.isnan(x)==False]
+
+    #What to compare against? The mean of a given year?
+    if year == [] or year[0]<1980:
+        plot_year = '1990'
+        print(f"BH #{pt_id} no modeled data: using 1990")
+    else:
+        plot_year = str(year[0])
+        print(f"BH # {pt_id} in year {plot_year}")
+
+    depth, model_mean = pt.columns, list(pt.loc[plot_year].mean())
+
+    f = interpolate.interp1d(depth, model_mean, bounds_error=False)
+    T_interp = f(measured.depth_m)
+    return measured, T_interp, pt, year, model_elevation
