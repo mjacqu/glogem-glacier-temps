@@ -46,7 +46,7 @@ for r in regions:
             rmse_20 = np.nan
 
         #lineplot showing measured and modeled data per glacier
-        f, [ax1, ax2] = plt.subplots(1,2,figsize=(10,10))
+        f, ax = plt.subplots(figsize=(6,9))
         colors = plt.cm.Blues_r(np.linspace(0, 1, 18))
         c_ct = 0
         if year == [] or year[0]<1980:
@@ -54,27 +54,28 @@ for r in regions:
         else:
             plot_year = str(year[0])
 
-        ax1.scatter(T_interp, measured.depth_m, color='k', marker='+', label='interpolated points')
-        ax1.plot(pt.loc[plot_year].mean(), pt.columns,
+        ax.scatter(T_interp, measured.depth_m, color='k', marker='+', label='interpolated points')
+        ax.plot(pt.loc[plot_year].mean(), pt.columns,
             linestyle=':', marker='.',
             label=f"model BH{pt_id}"
         )
-        ax1.plot(measured.temperature_degC, measured.depth_m,
+        ax.plot(measured.temperature_degC, measured.depth_m,
             linestyle=':', marker='.',
             label=f"measured at BH {measured.measurement_id.unique()[0]}"
         )
 
-        ax1.set_xlabel('Temperature (°C)')
-        ax1.set_ylabel('Depth (m)')
-        ax1.xaxis.tick_top()
-        ax1.legend()
-        ax1.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]} borehole #{pt_id}) \n Model year {plot_year} \n Model elevation: {model_elevation} \n RMSE: {rmse:.2f}, RMSE20: {rmse_20:.2f}")
+        ax.set_xlabel('Temperature (°C)')
+        ax.set_ylabel('Depth (m)')
+        #ax1.xaxis.tick_top()
+        ax.invert_yaxis()
+        ax.legend()
+        ax.set_title(f"{rgi_id} ({measured.glacier_name.unique()[0]} borehole #{pt_id}) \n Model year {plot_year} \n Model elevation: {model_elevation} \n RMSE: {rmse:.2f}, RMSE20: {rmse_20:.2f}")
 
-        ax2.scatter(T_interp, measured.temperature_degC)
-        ax2.set_xlabel('Modeled temperature')
-        ax2.set_ylabel('Measured temperature')
-        ax2.axis('equal')
+        #ax2.scatter(T_interp, measured.temperature_degC)
+        #ax2.set_xlabel('Modeled temperature')
+        #ax2.set_ylabel('Measured temperature')
+        #ax2.axis('equal')
+        #ax2.set_aspect('equal')
 
-        f.gca().invert_yaxis()
         f.savefig(f"Temp_val_outputs/{pt_id}_validation.png")
         plt.close(f)
