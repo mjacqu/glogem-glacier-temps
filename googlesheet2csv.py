@@ -15,8 +15,8 @@ def gs2csv_multisheet(sheetid, sheetname, path, fname):
 
 path = '/Users/mistral/git_repos/glenglat/data'
 sheet_id = '1zxn_8nitemCcFP5D-pGMRHwt6UYowfWnPx_Mq3gXVo4'
-sheet_names = ['sources', 'boreholes', 'temperatures']
-fnames = ['sources.csv', 'boreholes.csv', 'temperatures.csv']
+sheet_names = ['source', 'borehole', 'temperature']
+fnames = ['source.csv', 'borehole.csv', 'temperature.csv']
 
 [gs2csv_multisheet(sheet_id, sn, path, fn) for sn, fn in zip(sheet_names, fnames)]
 
