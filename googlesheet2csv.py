@@ -13,10 +13,10 @@ def gs2csv_multisheet(sheetid, sheetname, path, fname):
     df = pd.read_csv(url)
     df.to_csv(os.path.join(path,fname), index=False)
 
-path = './'
+path = '/Users/mistral/git_repos/glenglat/data'
 sheet_id = '1zxn_8nitemCcFP5D-pGMRHwt6UYowfWnPx_Mq3gXVo4'
-sheet_names = ['studies', 'measurement_info', 'data']
-fnames = ['studies.csv', 'measurement_info.csv', 'data.csv']
+sheet_names = ['sources', 'boreholes', 'temperatures']
+fnames = ['sources.csv', 'boreholes.csv', 'temperatures.csv']
 
 [gs2csv_multisheet(sheet_id, sn, path, fn) for sn, fn in zip(sheet_names, fnames)]
 
