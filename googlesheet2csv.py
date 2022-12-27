@@ -10,7 +10,7 @@ def gs2csv_singlesheet(url, path, fname):
 #generate csv from multiple sheets (tabs) in one Google Sheet:
 def gs2csv_multisheet(sheetid, sheetname, path, fname):
     url = f"https://docs.google.com/spreadsheets/d/{sheetid}/gviz/tq?tqx=out:csv&sheet={sheetname}"
-    df = pd.read_csv(url)
+    df = pd.read_csv(url, dtype={'epsg': 'Int64'})
     df.to_csv(os.path.join(path,fname), index=False)
 
 path = '/Users/mistral/git_repos/glenglat/data'
