@@ -22,21 +22,24 @@ def import_database(path):
     Return:
     joined database as pandas dataframe
     """
-    studies = pd.read_csv(os.path.join(path,'studies.csv'),
-        usecols=['study_id', 'first_author', 'year', 'title', 'included', 'url'])
-    sites = pd.read_csv(os.path.join(path, 'measurement_info.csv'),
-        usecols=['study_id', 'measurement_id', 'location_source', 'y_lat', 'x_lon',
-           'epsg', 'elevation_source', 'elevation_masl', 'glacier_name', 'rgi_id',
-            'start_date', 'end_date', 'published_accuracy', 'to_bottom', 'site_description',
+    studies = pd.read_csv(os.path.join(path,'source.csv'),
+        usecols=['id', 'first_author', 'year', 'title', 'included', 'url'])
+    sites = pd.read_csv(os.path.join(path, 'borehole.csv'),
+        usecols=['source_id', 'id', 'location_source', 'y_lat', 'x_lon',
+           'epsg', 'elevation_source', 'elevation', 'glacier_name', 'rgi_id',
+            'start_date', 'end_date', 'temperature_accuracy', 'to_bottom', 'site_description',
            'notes', 'extraction_method'],
-           dtype={'y_lat':np.float64, 'x_lon':np.float64})
-    temps = pd.read_csv(os.path.join(path, 'data.csv'),
-        usecols=['study_id', 'measurement_id', 'temperature_degC', 'depth_m'])
+           dtype={'y_lat':np.float64, 'x_lon':np.float64, 'epsg':'Int64'})
+    temps = pd.read_csv(os.path.join(path, 'temperature.csv'),
+        usecols=['id', 'borehole_id', 'temperature', 'depth'])
+    '''
     #Check equivalence of all id's and indicate where there might be a problem
-    siteids = list(zip(sites.study_id, sites.measurement_id))
-    measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
+    siteids = list(zip(sites.source_id, sites.id))
+    #measurementids = list(dict.fromkeys(zip(temps.study_id, temps.measurement_id)))
+    measurementids = list(dict.fromkeys(temps.borehole_id))
     #testids = [i for i, j in zip(siteids, measurementids) if i != j] #doesn't catch issue if lists are different lengths
     testids = list(set(siteids) - set(measurementids))
+    
     print("Check whether all tables list same IDs, drop ones that are not in all tables")
     if len(testids) > 0:
         print("IDs mismatch: ignoring following entries:")
@@ -46,8 +49,9 @@ def import_database(path):
         sites = sites.drop(index = ignoreids, axis = 0)
     else:
         print('IDs match!')
+    '''
     # join sites and temps on study_id and measurement_id keys
-    sites_temps = pd.merge(sites, temps, on=['study_id', 'measurement_id'], how='inner').reset_index(drop=True)
+    sites_temps = pd.merge(sites, temps, left_on =['id'], right_on=['borehole_id'], how='inner').reset_index(drop=True)
     sites_temps.start_date = pd.to_datetime(sites_temps.start_date)
     sites_temps.end_date = pd.to_datetime(sites_temps.end_date)
     sites.start_date = pd.to_datetime(sites.start_date)
